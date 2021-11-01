@@ -1,0 +1,10 @@
+TDDE25 progress report {Your LiU ID}, group SG2-D10, week {week number}
+
+What have you personally done in the project since the last report?
+{Your answers in Swedish or English}
+
+How many hours did you personally spend during each day?
+{Your answers in Swedish or English, for each day}
+
+How do you think the collaboration has worked?
+{Your answers in Swedish or English}

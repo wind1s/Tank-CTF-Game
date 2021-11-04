@@ -1,4 +1,4 @@
-TDDE25 progress report wilmi895, group SG2-D10, week 1
+TDDE25 progress report wilmi895, group SG2-CTF-10, week 1
 
 What have you personally done in the project since the last report?
 First report. I have configured the git repo and done the classes exercise with my partner.

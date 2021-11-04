@@ -1,4 +1,4 @@
-TDDE25 progress report {Your LiU ID}, group SG2-D10, week {week number}
+TDDE25 progress report {Your LiU ID}, group SG2-CTF-10, week {week number}
 
 What have you personally done in the project since the last report?
 {Your answers in Swedish or English}

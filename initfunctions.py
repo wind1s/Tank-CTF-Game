@@ -21,7 +21,7 @@ def create_grass_background(current_map, screen):
 
 def create_boxes(curr_map, space):
     boxes = []
-    # -- Create the boxes
+
     for x in range(0, curr_map.width):
         for y in range(0,  curr_map.height):
             # Get the type of boxes
@@ -37,7 +37,6 @@ def create_boxes(curr_map, space):
 
 
 def create_tanks(curr_map, space):
-    # -- Create the tanks
     tanks = []
     # Loop over the starting poistion
     for i in range(0, len(curr_map.start_positions)):
@@ -52,7 +51,6 @@ def create_tanks(curr_map, space):
 
 
 def create_bases(curr_map):
-    # -- Create the tanks
     bases = []
     # Loop over the starting poistion
     for i in range(0, len(curr_map.start_positions)):
@@ -67,7 +65,6 @@ def create_bases(curr_map):
 
 
 def create_flag(curr_map):
-    # -- Create the flag
     return gameobj.Flag(
         curr_map.flag_position[0],
         curr_map.flag_position[1])
@@ -99,14 +96,14 @@ def create_map_bounds(curr_map, body):
 
 
 def collision_bullet_tank(arb, space, _):
-    game_objects = game.game_objects
-    tanks = game.tanks
+    bullets = game.collision_object["bullet"]
+    tanks = game.collision_object["tank"]
     curr_map = game.current_map
     bullet_shape = arb.shapes[0]
     tank_shape = arb.shapes[1]
 
-    if bullet_shape.parent in game_objects:
-        game_objects.remove(bullet_shape.parent)
+    if bullet_shape.parent in bullets:
+        bullets.remove(bullet_shape.parent)
     space.remove(bullet_shape, bullet_shape.body)
 
     for i in range(0, len(curr_map.start_positions)):
@@ -122,27 +119,28 @@ def collision_bullet_tank(arb, space, _):
 
 
 def collision_bullet_box(arb, space, _):
-    game_objects = game.game_objects
+    bullets = game.collision_object["bullet"]
+    boxes = game.collision_object["box"]
     bullet_shape = arb.shapes[0]
     box_shape = arb.shapes[1]
 
-    if bullet_shape.parent in game_objects:
-        game_objects.remove(bullet_shape.parent)
+    if bullet_shape.parent in bullets:
+        bullets.remove(bullet_shape.parent)
     space.remove(bullet_shape, bullet_shape.body)
 
     if box_shape.parent.type == 1:
-        game_objects.remove(box_shape.parent)
+        boxes.remove(box_shape.parent)
         space.remove(box_shape, box_shape.body)
 
     return True
 
 
 def collision_bullet_wall(arb, space, _):
-    game_objects = game.game_objects
+    bullets = game.collision_object["bullet"]
     bullet_shape = arb.shapes[0]
 
-    if bullet_shape.parent in game_objects:
-        game_objects.remove(bullet_shape.parent)
+    if bullet_shape.parent in bullets:
+        bullets.remove(bullet_shape.parent)
     space.remove(bullet_shape, bullet_shape.body)
 
     return True

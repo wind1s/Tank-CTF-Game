@@ -12,7 +12,8 @@ import initgame as game
 def game_loop():
     # Main Loop
     # Control whether the game run
-    game.tanks[2].accelerate()
+    tanks = game.collision_object["tank"]
+    tanks[2].accelerate()
     running = True
     skip_update = 0
 
@@ -21,7 +22,7 @@ def game_loop():
         for event in pyg.event.get():
             # Check if we receive a QUIT event (for instance, if the user press the
             # close button of the wiendow) or if the user press the escape key.
-            player_tank = game.tanks[0]
+            player_tank = tanks[0]
             if event.type == pyg.QUIT or (
                     event.type == pyg.KEYDOWN and event.key == pyg.K_ESCAPE):
                 running = False
@@ -40,7 +41,7 @@ def game_loop():
                     player_tank.turn_right()
 
                 elif event.key == pyg.K_SPACE:
-                    player_tank.shoot(space, game.game_objects)
+                    player_tank.shoot(space, game.collision_object)
 
             elif event.type == pyg.KEYUP:
                 if event.key == pyg.K_UP or event.key == pyg.K_DOWN:
@@ -53,11 +54,9 @@ def game_loop():
         if skip_update == 0:
             # Loop over all the game objects and update their speed in function of their
             # acceleration.
-            for obj in game.game_objects:
-                obj.update()
-
-            for tank in game.tanks:
-                tank.update()
+            for objects in game.collision_object.values():
+                for obj in objects:
+                    obj.update()
 
             skip_update = 2
         else:
@@ -67,16 +66,18 @@ def game_loop():
         space.step(1 / FRAMERATE)
 
         #   Update object that depends on an other object position (for instance a flag)
-        for obj in game.game_objects:
-            obj.post_update()
+        for obj_type, objects in game.collision_object.items():
+            if obj_type == "tank":
+                for tank in objects:
+                    tank.try_grab_flag(game.no_collision_object["flag"])
+                    if tank.has_won():
+                        print(f"Tank {tank} has won!")
+                        running = False
 
-        for tank in game.tanks:
-            tank.try_grab_flag(game.flag)
-            if tank.has_won():
-                print(f"Tank {tank} has won!")
-                running = False
-
-            tank.post_update()
+                    tank.post_update()
+            else:
+                for obj in objects:
+                    obj.post_update()
 
         # -- Update Display
 
@@ -85,18 +86,16 @@ def game_loop():
 
         # <INSERT DISPLAY OBJECTS>
         # Update the display of the game objects on the screen
-        for obj in game.game_objects:
-            obj.update_screen(game.screen)
+        for objects in game.collision_object.values():
+            for obj in objects:
+                obj.update_screen(game.screen)
 
-        # Update the display of the bases on the screen
-        for base in game.bases:
-            base.update_screen(game.screen)
-
-        # Update the display of the tanks on the screen
-        for tank in game.tanks:
-            tank.update_screen(game.screen)
-
-        game.flag.update_screen(game.screen)
+        for objects in game.no_collision_object.values():
+            if isinstance(objects, list):
+                for obj in objects:
+                    obj.update_screen(game.screen)
+            else:
+                objects.update_screen(game.screen)
 
         #   Redisplay the entire screen (see double buffer technique)
         pyg.display.flip()

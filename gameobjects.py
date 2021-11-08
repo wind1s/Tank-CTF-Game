@@ -226,13 +226,13 @@ class Tank(GamePhysicsObject):
         return self.flag != None and (
             self.start_position - self.body.position).length < 0.2
 
-    def shoot(self, space, obj_list):
+    def shoot(self, space, coll_objs):
         """ Call this function to shoot a missile (current implementation does nothing ! you need to implement it yourself) """
         offset_vector = pymunk.Vec2d(0, 0.5).rotated(self.body.angle)
         x = self.body.position[0] + offset_vector.x
         y = self.body.position[1] + offset_vector.y
         orientation = self.body.angle
-        obj_list.append(
+        coll_objs["bullet"].append(
             Bullet(self, x, y, orientation, 3.5, images.bullet, space))
 
 

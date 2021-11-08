@@ -1,6 +1,8 @@
+import pymunkoptions
 import gameobjects
 import pygame
 import images
+import pymunk
 
 
 def generate_grass_background(current_map, screen):
@@ -18,10 +20,9 @@ def generate_grass_background(current_map, screen):
     return background
 
 
-# <INSERT CREATE BOXES>
 def create_boxes(current_map, space):
 
-    game_objects = []
+    boxes = []
     # -- Create the boxes
     for x in range(0, current_map.width):
         for y in range(0,  current_map.height):
@@ -32,9 +33,9 @@ def create_boxes(current_map, space):
                 # Create a "Box" using the box_type, aswell as the x,y coordinates,
                 # and the pymunk space
                 box = gameobjects.get_box_with_type(x, y, box_type, space)
-                game_objects.append(box)
+                boxes.append(box)
 
-    return game_objects
+    return boxes
 
 
 def create_tanks(current_map, space):
@@ -52,10 +53,48 @@ def create_tanks(current_map, space):
     return tanks
 
 
-# <INSERT CREATE FLAG>
+def create_bases(current_map):
+    # -- Create the tanks
+    bases = []
+    # Loop over the starting poistion
+    for i in range(0, len(current_map.start_positions)):
+        # Get the starting position of the tank "i"
+        pos = current_map.start_positions[i]
+        # Create the tank, images.tanks contains the image representing the tank
+        base = gameobjects.Base(pos[0], pos[1], images.bases[i])
+        # Add the tank to the list of tanks
+        bases.append(base)
+
+    return bases
+
 
 def create_flag(current_map):
     # -- Create the flag
     return gameobjects.Flag(
         current_map.flag_position[0],
         current_map.flag_position[1])
+
+
+def create_map_bounds(curr_map, space):
+    bounds = [pymunk.Segment(
+        space.static_body, (0, 0),
+        (0, curr_map.height),
+        0.0),
+        pymunk.Segment(
+        space.static_body, (0, curr_map.height),
+        (curr_map.width, curr_map.height),
+        0.0),
+        pymunk.Segment(
+        space.static_body, (curr_map.width, curr_map.height),
+        (curr_map.width, 0),
+        0.0),
+        pymunk.Segment(
+        space.static_body, (curr_map.width, 0),
+        (0, 0),
+        0.0)]
+
+    for line in bounds:
+        line.elasticity = 0.0
+        line.friction = 0.0
+        line.collision_type = 0
+    space.add(*bounds)

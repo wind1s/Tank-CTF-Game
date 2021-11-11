@@ -1,9 +1,13 @@
-## Capture the Flag user manual
+# Capture the Flag user manual
 
-No code has been written. 
+## Starting game
+
+Start the game by running ```python3 ctf.py```. 
+
+#### Future ideas
+
+Game options, change key layout, ajust sound, cheat codes etc.
+Add knockback to tanks.
 
 template for readme
 [link](url)
-´´´
-Code block
-´´´

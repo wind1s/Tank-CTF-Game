@@ -142,11 +142,13 @@ class Tank(GamePhysicsObject):
         # Define variable used to apply motion to the tanks
         self.acceleration = 0  # 1 forward, 0 for stand still, -1 for backwards
         self.rotation = 0  # 1 clockwise, 0 for no rotation, -1 counter clockwise
+        self.body.angular_velocity = 0
 
         self.flag = None                      # This variable is used to access the flag object, if the current tank is carrying the flag
         self.max_speed = Tank.NORMAL_MAX_SPEED     # Impose a maximum speed to the tank
         # Define the start position, which is also the position where the tank has to return with the flag
         self.start_position = pymunk.Vec2d(x, y)
+        self.start_orientation = orientation
         self.bullets = []
 
         self.shape.collision_type = 2
@@ -229,11 +231,29 @@ class Tank(GamePhysicsObject):
     def shoot(self, space, coll_objs):
         """ Call this function to shoot a missile (current implementation does nothing ! you need to implement it yourself) """
         offset_vector = pymunk.Vec2d(0, 0.5).rotated(self.body.angle)
-        x = self.body.position[0] + offset_vector.x
-        y = self.body.position[1] + offset_vector.y
+        bullet_x = self.body.position[0] + offset_vector.x
+        bullet_y = self.body.position[1] + offset_vector.y
         orientation = self.body.angle
         coll_objs["bullet"].append(
-            Bullet(self, x, y, orientation, 3.5, images.bullet, space))
+            Bullet(
+                self, bullet_x, bullet_y, orientation, 3.5, images.bullet,
+                space))
+
+    def get_shot(self):
+        pass
+
+    def respawn(self):
+        self.stop_moving()
+        self.stop_turning()
+        start_x = self.start_position[0]
+        start_y = self.start_position[1]
+        start_angle = math.radians(self.start_orientation)
+
+        self.set_pos(start_x, start_y, start_angle)
+
+    def set_pos(self, x, y, angle):
+        self.body.position = pymunk.Vec2d(x, y)
+        self.body.angle = angle
 
 
 class Bullet(GamePhysicsObject):

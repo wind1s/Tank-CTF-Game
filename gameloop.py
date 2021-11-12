@@ -11,7 +11,6 @@ import ai
 def game_loop():
     # Main Loop
     # Control whether the game run
-    tanks = collision_object["tank"]
     tanks[2].accelerate()
     running = True
     skip_update = 0
@@ -40,7 +39,7 @@ def game_loop():
                     player_tank.turn_right()
 
                 elif event.key == pyg.K_SPACE:
-                    player_tank.shoot(space, collision_object)
+                    player_tank.shoot(space, game_objects)
 
             elif event.type == pyg.KEYUP:
                 if event.key == pyg.K_UP or event.key == pyg.K_DOWN:
@@ -49,13 +48,19 @@ def game_loop():
                 elif event.key == pyg.K_LEFT or event.key == pyg.K_RIGHT:
                     player_tank.stop_turning()
 
+        # Decide what the ai should do.
+        for ai in ai_objects:
+            ai.decide()
+
         # -- Update physics
         if skip_update == 0:
             # Loop over all the game objects and update their speed in function of their
             # acceleration.
-            for objects in collision_object.values():
-                for obj in objects:
-                    obj.update()
+            for obj in game_objects:
+                obj.update()
+
+            for tank in tanks:
+                tank.update()
 
             skip_update = 2
         else:
@@ -65,18 +70,16 @@ def game_loop():
         space.step(1 / FRAMERATE)
 
         #   Update object that depends on an other object position (for instance a flag)
-        for obj_type, objects in collision_object.items():
-            if obj_type == "tank":
-                for tank in objects:
-                    tank.try_grab_flag(no_collision_object["flag"])
-                    if tank.has_won():
-                        print(f"Tank {tank} has won!")
-                        running = False
+        for obj in game_objects:
+            obj.post_update()
 
-                    tank.post_update()
-            else:
-                for obj in objects:
-                    obj.post_update()
+        for tank in tanks:
+            tank.try_grab_flag(flag)
+            if tank.has_won():
+                print(f"Tank {tank} has won!")
+                running = False
+
+            tank.post_update()
 
         # -- Update Display
 
@@ -85,16 +88,11 @@ def game_loop():
 
         # <INSERT DISPLAY OBJECTS>
         # Update the display of the game objects on the screen
-        for objects in collision_object.values():
-            for obj in objects:
-                obj.update_screen(screen)
+        for obj in game_objects:
+            obj.update_screen(screen)
 
-        for objects in no_collision_object.values():
-            if isinstance(objects, list):
-                for obj in objects:
-                    obj.update_screen(screen)
-            else:
-                objects.update_screen(screen)
+        for tank in tanks:
+            tank.update_screen(screen)
 
         #   Redisplay the entire screen (see double buffer technique)
         pyg.display.flip()

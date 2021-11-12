@@ -149,7 +149,6 @@ class Tank(GamePhysicsObject):
         # Define the start position, which is also the position where the tank has to return with the flag
         self.start_position = pymunk.Vec2d(x, y)
         self.start_orientation = orientation
-        self.bullets = []
 
         self.shape.collision_type = 2
 
@@ -228,13 +227,13 @@ class Tank(GamePhysicsObject):
         return self.flag != None and (
             self.start_position - self.body.position).length < 0.2
 
-    def shoot(self, space, coll_objs):
+    def shoot(self, space, game_objects):
         """ Call this function to shoot a missile (current implementation does nothing ! you need to implement it yourself) """
         offset_vector = pymunk.Vec2d(0, 0.5).rotated(self.body.angle)
         bullet_x = self.body.position[0] + offset_vector.x
         bullet_y = self.body.position[1] + offset_vector.y
         orientation = self.body.angle
-        coll_objs["bullet"].append(
+        game_objects.append(
             Bullet(
                 self, bullet_x, bullet_y, orientation, 3.5, images.bullet,
                 space))
@@ -243,12 +242,11 @@ class Tank(GamePhysicsObject):
         pass
 
     def respawn(self):
-        self.stop_moving()
-        self.stop_turning()
         start_x = self.start_position[0]
         start_y = self.start_position[1]
         start_angle = math.radians(self.start_orientation)
-
+        self.stop_moving()
+        self.stop_turning()
         self.set_pos(start_x, start_y, start_angle)
 
     def set_pos(self, x, y, angle):

@@ -31,3 +31,10 @@ bases = cobj.create_bases(current_map)
 game_objects = boxes + [flag] + bases
 
 ai_objects = cobj.create_ai(tanks, game_objects, space, current_map)
+path = ai_objects[0].find_shortest_path(tanks[0].start_position, pym.Vec2d(4,4))
+print(path)
+
+test = ai_objects[1]
+print(test.tank.get_pos())
+test.turn(pym.Vec2d(4,4))
+print(test.tank.get_pos())

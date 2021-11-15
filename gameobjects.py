@@ -253,6 +253,12 @@ class Tank(GamePhysicsObject):
         self.body.position = pymunk.Vec2d(x, y)
         self.body.angle = angle
 
+    def get_pos(self):
+        return self.body.position
+
+    def get_angle(self):
+        return self.body.angle
+
 
 class Bullet(GamePhysicsObject):
 
@@ -281,6 +287,10 @@ class Bullet(GamePhysicsObject):
 class Box(GamePhysicsObject):
     """ This class extends the GamePhysicsObject to handle box objects. """
 
+    ROCKBOX_TYPE = 1
+    WOODBOX_TYPE = 2
+    METALBOX_TYPE = 3
+
     def __init__(self, x, y, sprite, movable, space, destructable, type):
         """ It takes as arguments the coordinate of the starting position of the box (x,y) and the box model (boxmodel). """
         super().__init__(x, y, 0, sprite, space, movable)
@@ -292,11 +302,11 @@ class Box(GamePhysicsObject):
 def get_box_with_type(x, y, type, space):
     (x, y) = (x + 0.5, y + 0.5)  # Offsets the coordinate to the center of the tile
     if type == 1:  # Creates a non-movable non-destructable rockbox
-        return Box(x, y, images.rockbox, False, space, False, 0)
+        return Box(x, y, images.rockbox, False, space, False, Box.ROCKBOX_TYPE)
     if type == 2:  # Creates a movable destructable woodbox
-        return Box(x, y, images.woodbox, True, space, True, 1)
+        return Box(x, y, images.woodbox, True, space, True, Box.WOODBOX_TYPE)
     if type == 3:  # Creates a movable non-destructable metalbox
-        return Box(x, y, images.metalbox, True, space, False, 2)
+        return Box(x, y, images.metalbox, True, space, False, Box.METALBOX_TYPE)
 
 
 class GameVisibleObject(GameObject):

@@ -37,7 +37,7 @@ def collision_bullet_box(arb, space, _):
     remove_collision_object(bullet_shape.parent, bullet_shape, space)
 
     box_collision_type = box_shape.parent.type
-    if box_collision_type == 1:
+    if box_collision_type == gameobj.Box.WOODBOX_TYPE:
         remove_collision_object(box_shape.parent, box_shape, space)
     # elif box_collision_type ==
 

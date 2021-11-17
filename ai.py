@@ -25,12 +25,6 @@ def periodic_difference_of_angles(angle1, angle2):
     return (angle1 % (2*math.pi)) - (angle2 % (2*math.pi))
 
 
-class Node:
-    def __init__(self, coords, lastnode):
-        self.coords = coords
-        self.lastnode = lastnode
-
-
 class Ai:
     """ A simple ai that finds the shortest path to the target using 
     a breadth first search. Also capable of shooting other tanks and or wooden

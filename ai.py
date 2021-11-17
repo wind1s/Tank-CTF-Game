@@ -1,13 +1,15 @@
 import math
 import pymunk
 from pymunk import Vec2d
+from pymunk import vec2d
 import gameobjects
 from collections import defaultdict, deque
 
 # NOTE: use only 'map0' during development!
 
 # 3 degrees, a bit more than we can turn each tick
-MIN_ANGLE_DIF = math.radians(3)
+MIN_ANGLE_DIF = math.radians(2)
+MIN_POS_DIFF = 0.1
 
 
 def angle_between_vectors(vec1, vec2):
@@ -54,7 +56,7 @@ class Ai:
 
     def decide(self):
         """ Main decision function that gets called on every tick of the game. """
-        #next(self.move_cycle)
+        next(self.move_cycle)
 
     def maybe_shoot(self):
         """ Makes a raycast query in front of the tank. If another tank
@@ -64,51 +66,70 @@ class Ai:
 
     def turn(self, next_coord):
         """"""
-        self.tank.stop_moving()
 
-        target_angle = angle_between_vectors(self.tank.get_pos(), next_coord)
+        target_angle = angle_between_vectors(
+            self.tank.get_pos(), next_coord)
 
-        current_diff = periodic_difference_of_angles(self.tank.get_angle(), target_angle)
-        if current_diff < 0:
-            current_diff += 2 * math.pi
-        print(current_diff)
-        while current_diff > MIN_ANGLE_DIF:
-            if current_diff < math.pi:
-                self.tank.turn_left()
-            else:
-                self.tank.turn_right()
-            
-            current_diff = periodic_difference_of_angles(self.tank.get_angle(), target_angle) 
+        current_diff = periodic_difference_of_angles(
+            self.tank.get_angle(), target_angle)
 
-        self.tank.stop_turning()
+        if current_diff > 0:
+            self.tank.turn_left()
+        else:
+            self.tank.turn_right()
 
+    def correct_angle(self, next_coord):
+        target_angle = angle_between_vectors(
+            self.tank.get_pos(), next_coord)
 
+        current_diff = periodic_difference_of_angles(
+            self.tank.get_angle(), target_angle)
+
+        return abs(current_diff) <= MIN_ANGLE_DIF
+
+    def correct_pos(self, next_coord):
+        return self.tank.body.position.get_distance(next_coord) < MIN_POS_DIFF
 
     def move_cycle_gen(self):
         """ A generator that iteratively goes through all the required steps
             to move to our goal.
         """
 
-        """
-        while True: 
-            path = self.find_shortest_path(self.tank.get_pos(), Vec2d(4, 4))
+        while True:
+            path = self.find_shortest_path(
+                self.tank.get_pos(), Vec2d(4, 4))
+            path = self.shorten_path(path)
+            path.popleft()
 
-            if not has_shortest_path():
-                yield   
-                continue # Start from the top of our cycle
+            if not path:
+                yield
+                continue  # Start from the top of our cycle
 
-            next_coord = path.popleft()
+            next_coord = path.popleft() + Vec2d(0.5, 0.5)
+            self.tank.stop_moving()
             yield
-            turn()
+            self.turn(next_coord)
 
-            while not correct_angle():
+            while not self.correct_angle(next_coord):
+                self.tank.stop_moving()
                 yield
 
-            accelerate()
+            self.tank.stop_turning()
 
-            while not correct_pos():
+            self.tank.accelerate()
+
+            while not self.correct_pos(next_coord):
                 yield
-        """ 
+
+    def shorten_path(self, path):
+        new_path = deque()
+        new_path.append(path[0])
+        for i in range(1, len(path) - 1):
+            if path[i-1].x != path[i+1].x and path[i-1].y != path[i+1].y:
+                new_path.append(path[i])
+
+        new_path.append(path[-1])
+        return new_path
 
     def find_shortest_path(self, origin, target):
         """ A simple Breadth First Search using integer coordinates as our nodes.
@@ -121,8 +142,6 @@ class Ai:
         queue = deque([origin])
         visited = set()
 
-        longest = 0
-
         while queue:
             node = queue.popleft()
             nodepath = []
@@ -131,7 +150,6 @@ class Ai:
                 if path[-1] == node:
                     nodepath = path
             paths.remove(nodepath)
-            longest = max(longest, len(paths))
 
             if node == target:
                 shortest_path = nodepath
@@ -142,8 +160,6 @@ class Ai:
                     queue.append(neighbor)
                     visited.add(neighbor.int_tuple)
                     paths.append(nodepath + [neighbor])
-
-        print(longest)
 
         return deque(shortest_path)
 
@@ -182,7 +198,11 @@ class Ai:
         """
         pos_vec = self.get_tile_of_position(coord_vec)
         # Find the coordinates of the tiles' four neighbors
-        neighbors = [pos_vec + Vec2d(0, -1), pos_vec + Vec2d(-1, 0), pos_vec + Vec2d(0, 1), pos_vec + Vec2d(1, 0)]  
+        neighbors = [
+            pos_vec + Vec2d(0, -1),
+            pos_vec + Vec2d(-1, 0),
+            pos_vec + Vec2d(0, 1),
+            pos_vec + Vec2d(1, 0)]
 
         return filter(self.filter_tile_neighbors, neighbors)
 

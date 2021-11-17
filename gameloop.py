@@ -8,10 +8,19 @@ import images as img
 import ai
 
 
+def key_down_event(event, player_tank):
+    key_events = {pyg.K_UP: player_tank.accelerate(),
+                  pyg.K_DOWN: player_tank.decelerate(),
+                  pyg.K_LEFT: player_tank.turn_left(),
+                  pyg.K_RIGHT: player_tank.turn_right(),
+                  pyg.K_SPACE: player_tank.shoot(space, game_objects)}
+
+    key_events[event.key]()
+
+
 def game_loop():
     # Main Loop
     # Control whether the game run
-    tanks[2].accelerate()
     running = True
     skip_update = 0
 
@@ -20,37 +29,38 @@ def game_loop():
         for event in pyg.event.get():
             # Check if we receive a QUIT event (for instance, if the user press the
             # close button of the wiendow) or if the user press the escape key.
-            player_tank = tanks[0]
+            player1_tank = tanks[0]
+            player2_tank = tanks[1]
             if event.type == pyg.QUIT or (
                     event.type == pyg.KEYDOWN and event.key == pyg.K_ESCAPE):
                 running = False
 
             elif event.type == pyg.KEYDOWN:
                 if event.key == pyg.K_UP:
-                    player_tank.accelerate()
+                    player1_tank.accelerate()
 
                 elif event.key == pyg.K_DOWN:
-                    player_tank.decelerate()
+                    player1_tank.decelerate()
 
                 elif event.key == pyg.K_LEFT:
-                    player_tank.turn_left()
+                    player1_tank.turn_left()
 
                 elif event.key == pyg.K_RIGHT:
-                    player_tank.turn_right()
+                    player1_tank.turn_right()
 
                 elif event.key == pyg.K_SPACE:
-                    player_tank.shoot(space, game_objects)
+                    player1_tank.shoot(space, game_objects)
 
             elif event.type == pyg.KEYUP:
                 if event.key == pyg.K_UP or event.key == pyg.K_DOWN:
-                    player_tank.stop_moving()
+                    player1_tank.stop_moving()
 
                 elif event.key == pyg.K_LEFT or event.key == pyg.K_RIGHT:
-                    player_tank.stop_turning()
+                    player1_tank.stop_turning()
 
         # Decide what the ai should do.
-        for ai in ai_objects:
-            ai.decide()
+        for ai_obj in ai_objects:
+            ai_obj.decide()
 
         # -- Update physics
         if skip_update == 0:
@@ -73,10 +83,10 @@ def game_loop():
         for obj in game_objects:
             obj.post_update()
 
-        for tank in tanks:
+        for i, tank in enumerate(tanks):
             tank.try_grab_flag(flag)
             if tank.has_won():
-                print(f"Tank {tank} has won!")
+                print(f"Tank {i} has won!")
                 running = False
 
             tank.post_update()

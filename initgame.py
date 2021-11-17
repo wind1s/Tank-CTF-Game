@@ -28,13 +28,12 @@ tanks = cobj.create_tanks(current_map, space)
 flag = cobj.create_flag(current_map)
 bases = cobj.create_bases(current_map)
 
+tanks[0].NORMAL_MAX_SPEED = 3.0
+
 game_objects = boxes + [flag] + bases
 
-ai_objects = cobj.create_ai(tanks, game_objects, space, current_map)
-path = ai_objects[0].find_shortest_path(tanks[0].start_position, pym.Vec2d(4,4))
-print(path)
+ai_objects = cobj.create_ai(tanks[1:], game_objects, space, current_map)
 
-test = ai_objects[1]
-print(test.tank.get_pos())
-test.turn(pym.Vec2d(4,4))
-print(test.tank.get_pos())
+path = ai_objects[0].find_shortest_path(
+    tanks[0].start_position, pym.Vec2d(4, 4))
+print(ai_objects[0].shorten_path(path))

@@ -8,14 +8,29 @@ import images as img
 import ai
 
 
-def key_down_event(event, player_tank):
-    key_events = {pyg.K_UP: player_tank.accelerate(),
-                  pyg.K_DOWN: player_tank.decelerate(),
-                  pyg.K_LEFT: player_tank.turn_left(),
-                  pyg.K_RIGHT: player_tank.turn_right(),
-                  pyg.K_SPACE: player_tank.shoot(space, game_objects)}
+def key_down_event(event_key, player_tank, args_lookup):
+    key_events = {pyg.K_UP: player_tank.accelerate,
+                  pyg.K_DOWN: player_tank.decelerate,
+                  pyg.K_LEFT: player_tank.turn_left,
+                  pyg.K_RIGHT: player_tank.turn_right,
+                  pyg.K_SPACE: player_tank.shoot}
 
-    key_events[event.key]()
+    if event_key in args_lookup:
+        key_events[event_key](*args_lookup[event_key])
+    else:
+        key_events[event_key]()
+
+
+def key_up_event(event_key, player_tank, args_lookup):
+    key_events = {pyg.K_UP: player_tank.stop_moving,
+                  pyg.K_DOWN: player_tank.stop_moving,
+                  pyg.K_LEFT: player_tank.stop_turning,
+                  pyg.K_RIGHT: player_tank.stop_turning}
+
+    if event_key in args_lookup:
+        key_events[event_key](*args_lookup[event_key])
+    else:
+        key_events[event_key]()
 
 
 def game_loop():
@@ -23,6 +38,9 @@ def game_loop():
     # Control whether the game run
     running = True
     skip_update = 0
+
+    key_down_event_args = {pyg.K_SPACE: (space, game_objects)}
+    key_up_event_args = {}
 
     while running:
         # -- Handle the events
@@ -36,27 +54,10 @@ def game_loop():
                 running = False
 
             elif event.type == pyg.KEYDOWN:
-                if event.key == pyg.K_UP:
-                    player1_tank.accelerate()
-
-                elif event.key == pyg.K_DOWN:
-                    player1_tank.decelerate()
-
-                elif event.key == pyg.K_LEFT:
-                    player1_tank.turn_left()
-
-                elif event.key == pyg.K_RIGHT:
-                    player1_tank.turn_right()
-
-                elif event.key == pyg.K_SPACE:
-                    player1_tank.shoot(space, game_objects)
+                key_down_event(event.key, player1_tank, key_down_event_args)
 
             elif event.type == pyg.KEYUP:
-                if event.key == pyg.K_UP or event.key == pyg.K_DOWN:
-                    player1_tank.stop_moving()
-
-                elif event.key == pyg.K_LEFT or event.key == pyg.K_RIGHT:
-                    player1_tank.stop_turning()
+                key_up_event(event.key, player1_tank, key_up_event_args)
 
         # Decide what the ai should do.
         for ai_obj in ai_objects:

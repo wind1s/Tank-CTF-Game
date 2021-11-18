@@ -136,6 +136,7 @@ class Tank(GamePhysicsObject):
     ACCELERATION = 0.5
     NORMAL_MAX_SPEED = 2.0
     FLAG_MAX_SPEED = NORMAL_MAX_SPEED * 0.5
+    SHOOT_COOLDOWN_MS = 0.5 * 1000.0
 
     def __init__(self, x, y, orientation, sprite, space):
         super().__init__(x, y, orientation, sprite, space, True)
@@ -151,6 +152,7 @@ class Tank(GamePhysicsObject):
         self.start_orientation = orientation
 
         self.shape.collision_type = 2
+        self.shoot_wait = 0
 
     def accelerate(self):
         """ Call this function to make the tank move forward. """
@@ -198,7 +200,9 @@ class Tank(GamePhysicsObject):
         self.body.angular_velocity = clamp(
             self.max_speed, self.body.angular_velocity)
 
-    def post_update(self):
+    def post_update(self, clock):
+        # Reduce timers by time this tick took.
+        self.shoot_wait -= clock.get_time() if self.shoot_wait >= 0 else 0
         # If the tank carries the flag, then update the positon of the flag
         if(self.flag != None):
             self.flag.x = self.body.position[0]
@@ -229,10 +233,15 @@ class Tank(GamePhysicsObject):
 
     def shoot(self, space, game_objects):
         """ Call this function to shoot a missile (current implementation does nothing ! you need to implement it yourself) """
+        if self.shoot_wait > 0:
+            return
+
+        self.shoot_wait = self.SHOOT_COOLDOWN_MS
         offset_vector = pymunk.Vec2d(0, 0.5).rotated(self.body.angle)
         bullet_x = self.body.position[0] + offset_vector.x
         bullet_y = self.body.position[1] + offset_vector.y
         orientation = self.body.angle
+
         game_objects.append(
             Bullet(
                 self, bullet_x, bullet_y, orientation, 3.5, images.bullet,

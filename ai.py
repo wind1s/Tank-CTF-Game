@@ -1,9 +1,8 @@
 import math
-import pymunk
 from pymunk import Vec2d
-from pymunk import vec2d
 import gameobjects
-from collections import defaultdict, deque
+from collections import deque
+from random import random
 
 # NOTE: use only 'map0' during development!
 
@@ -79,10 +78,13 @@ class Ai:
         current_diff = periodic_difference_of_angles(
             self.tank.get_angle(), target_angle)
 
-        return abs(current_diff) <= MIN_ANGLE_DIF
+        # Add random value to make ai's movement different.
+        return abs(current_diff) <= (MIN_ANGLE_DIF + math.radians(random()))
 
     def correct_pos(self, next_coord):
-        return self.tank.body.position.get_distance(next_coord) < MIN_POS_DIFF
+        # Add random value to make ai's movement different.
+        return self.tank.body.position.get_distance(next_coord) <= (
+            MIN_POS_DIFF + random()/10)
 
     def move_cycle_gen(self):
         """ A generator that iteratively goes through all the required steps
@@ -102,18 +104,21 @@ class Ai:
             next_coord = path.popleft() + Vec2d(0.5, 0.5)
             self.tank.stop_moving()
             yield
+
             self.turn(next_coord)
 
             while not self.correct_angle(next_coord):
-                self.tank.stop_moving()
                 yield
 
             self.tank.stop_turning()
+            yield
 
             self.tank.accelerate()
 
             while not self.correct_pos(next_coord):
                 yield
+
+            self.tank.stop_moving()
 
     def shorten_path(self, path):
         new_path = deque()
@@ -201,14 +206,14 @@ class Ai:
         return filter(self.filter_tile_neighbors, neighbors)
 
     def filter_tile_neighbors(self, coord):
-        if coord.x < 0 or coord.x > self.MAX_X:
-            return False
-        elif coord.y < 0 or coord.y > self.MAX_Y:
-            return False
-        elif self.currentmap.boxAt(coord.x, coord.y) > 0:
+        x_in_bounds = coord.x >= 0 and coord.x <= self.MAX_X
+        y_in_bounds = coord.y >= 0 and coord.y <= self.MAX_Y
+
+        if not (x_in_bounds and y_in_bounds):
             return False
 
-        return True
+        box_is_grass = self.currentmap.boxAt(coord.x, coord.y) == 0
+        return box_is_grass
 
 
 SimpleAi = Ai  # Legacy

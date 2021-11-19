@@ -41,7 +41,6 @@ class Ai:
 
         self.path = deque()
         self.move_cycle = self.move_cycle_gen()
-        self.update_grid_pos()
 
     def update_grid_pos(self):
         """ This should only be called in the beginning, or at the end of a move_cycle. """
@@ -122,43 +121,43 @@ class Ai:
 
     def shorten_path(self, path):
         new_path = deque()
-        new_path.append(path[0])
-        for i in range(1, len(path) - 1):
-            if path[i-1].x != path[i+1].x and path[i-1].y != path[i+1].y:
-                new_path.append(path[i])
 
+        def path_tile_is_turn(i):
+            return path[i-1].x != path[i+1].x and path[i-1].y != path[i+1].y
+
+        new_path.append(path[0])
+        new_path.extend([path[i] for i in range(
+            1, len(path) - 1) if path_tile_is_turn(i)])
         new_path.append(path[-1])
+
         return new_path
 
     def find_shortest_path(self, origin, target):
         """ A simple Breadth First Search using integer coordinates as our nodes.
             Edges are calculated as we go, using an external function.
         """
-        # To be implemented
         origin = self.get_tile_of_position(origin)
         shortest_path = []
-        paths = [[origin]]
+        paths = {origin.int_tuple: [origin]}
         queue = deque([origin])
         visited = set()
 
         while queue:
             node = queue.popleft()
-            nodepath = []
-
-            for path in paths:
-                if path[-1] == node:
-                    nodepath = path
-            paths.remove(nodepath)
 
             if node == target:
-                shortest_path = nodepath
+                shortest_path = paths[node.int_tuple].copy()
+                shortest_path.append(node)
                 break
 
             for neighbor in self.get_tile_neighbors(node):
                 if neighbor.int_tuple not in visited:
                     queue.append(neighbor)
                     visited.add(neighbor.int_tuple)
-                    paths.append(nodepath + [neighbor])
+                    paths[neighbor.int_tuple] = paths[node.int_tuple].copy()
+                    paths[neighbor.int_tuple].append(neighbor)
+
+            del paths[node.int_tuple]
 
         return deque(shortest_path)
 

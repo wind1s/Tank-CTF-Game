@@ -19,12 +19,20 @@ def game_loop():
         pyg.K_DOWN: [player1_tank],
         pyg.K_LEFT: [player1_tank],
         pyg.K_RIGHT: [player1_tank],
+        pyg.K_w: [player1_tank],
+        pyg.K_s: [player1_tank],
+        pyg.K_a: [player1_tank],
+        pyg.K_d: [player1_tank],
         pyg.K_SPACE: [player1_tank, space, game_objects]}
 
     key_up_event_args = {pyg.K_UP: [player1_tank],
                          pyg.K_DOWN: [player1_tank],
                          pyg.K_LEFT: [player1_tank],
-                         pyg.K_RIGHT: [player1_tank]}
+                         pyg.K_RIGHT: [player1_tank],
+                         pyg.K_w: [player1_tank],
+                         pyg.K_s: [player1_tank],
+                         pyg.K_a: [player1_tank],
+                         pyg.K_d: [player1_tank]}
 
     while running:
         # -- Handle the events
@@ -73,7 +81,8 @@ def game_loop():
                 print(f"Tank {i} has won!")
                 running = False
 
-            tank.post_update(clock)
+            tank.post_update()
+            tank.update_cooldown(clock)
 
         # -- Update Display
 

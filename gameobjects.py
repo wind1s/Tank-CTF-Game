@@ -14,8 +14,8 @@ class Tank(GamePhysicsObject):
 
     # Constant values for the tank, acessed like: Tank.ACCELERATION
     # You can add more constants here if needed later
-    ACCELERATION = 0.5
-    NORMAL_MAX_SPEED = 2.0
+    ACCELERATION = 1
+    NORMAL_MAX_SPEED = 4
     FLAG_MAX_SPEED = NORMAL_MAX_SPEED * 0.5
     SHOOT_COOLDOWN_MS = 0.5 * 1000.0
 
@@ -109,6 +109,11 @@ class Tank(GamePhysicsObject):
                 flag.is_on_tank = True
                 self.max_speed = Tank.FLAG_MAX_SPEED
 
+    def try_drop_flag(self):
+        if self.flag != None:
+            self.flag.is_on_tank = False
+            self.flag = None
+
     def has_won(self):
         """ Check if the current tank has won (if it is has the flag and it is close to its start position). """
         return self.flag != None and (
@@ -134,11 +139,14 @@ class Tank(GamePhysicsObject):
         pass
 
     def respawn(self):
+        self.try_drop_flag()
+
         start_x = self.start_position[0]
         start_y = self.start_position[1]
         start_angle = math.radians(self.start_orientation)
         self.stop_moving()
         self.stop_turning()
+
         self.set_pos(start_x, start_y, start_angle)
 
     def set_pos(self, x, y, angle):
@@ -179,25 +187,26 @@ class Bullet(GamePhysicsObject):
 class Box(GamePhysicsObject):
     """ This class extends the GamePhysicsObject to handle box objects. """
 
+    GRASS_TYPE = 0
     ROCKBOX_TYPE = 1
     WOODBOX_TYPE = 2
     METALBOX_TYPE = 3
 
-    def __init__(self, x, y, sprite, movable, space, destructable, type):
+    def __init__(self, x, y, sprite, movable, space, destructable, box_type):
         """ It takes as arguments the coordinate of the starting position of the box (x,y) and the box model (boxmodel). """
         super().__init__(x, y, 0, sprite, space, movable)
         self.destructable = destructable
-        self.type = type
+        self.box_type = box_type
         self.shape.collision_type = 3
 
 
-def get_box_with_type(x, y, type, space):
+def get_box_with_type(x, y, box_type, space):
     (x, y) = (x + 0.5, y + 0.5)  # Offsets the coordinate to the center of the tile
-    if type == 1:  # Creates a non-movable non-destructable rockbox
+    if box_type == 1:  # Creates a non-movable non-destructable rockbox
         return Box(x, y, img.rockbox, False, space, False, Box.ROCKBOX_TYPE)
-    if type == 2:  # Creates a movable destructable woodbox
+    if box_type == 2:  # Creates a movable destructable woodbox
         return Box(x, y, img.woodbox, True, space, True, Box.WOODBOX_TYPE)
-    if type == 3:  # Creates a movable non-destructable metalbox
+    if box_type == 3:  # Creates a movable non-destructable metalbox
         return Box(x, y, img.metalbox, True, space, False, Box.METALBOX_TYPE)
 
 

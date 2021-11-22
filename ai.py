@@ -1,6 +1,6 @@
 import math
-from pymunk import Vec2d
-import gameobjects
+import pymunk as pym
+import gameobjects as gameobj
 from collections import deque
 from random import random
 
@@ -25,7 +25,7 @@ def periodic_difference_of_angles(angle1, angle2):
 
 
 class Ai:
-    """ A simple ai that finds the shortest path to the target using 
+    """ A simple ai that finds the shortest path to the target using
     a breadth first search. Also capable of shooting other tanks and or wooden
     boxes. """
 
@@ -49,12 +49,33 @@ class Ai:
     def decide(self):
         """ Main decision function that gets called on every tick of the game. """
         next(self.move_cycle)
+        self.maybe_shoot()
+
+    def find_target_point(self, origin, angle, length):
+        offset = pym.Vec2d(0, length).rotated(angle)
+        return origin + offset
 
     def maybe_shoot(self):
         """ Makes a raycast query in front of the tank. If another tank
-            or a wooden box is found, then we shoot. 
+            or a wooden box is found, then we shoot.
         """
-        pass  # To be implemented
+        start = self.find_target_point(
+            self.tank.body.position, self.tank.body.angle, 0.5)
+        end = self.find_target_point(start, self.tank.body.angle, 9)
+        type_hit = self.space.segment_query_first(
+            start, end, 0, pym.ShapeFilter())
+
+        if hasattr(
+                type_hit, "shape") and hasattr(
+                type_hit.shape, "parent"):
+
+            parent = type_hit.shape.parent
+
+            if isinstance(parent, gameobj.Tank) or (
+                    isinstance(parent, gameobj.Box) and (parent.box_type ==
+                                                         gameobj.Box.WOODBOX_TYPE or parent.box_type ==
+                                                         gameobj.Box.METALBOX_TYPE)):
+                self.tank.shoot(self.space, self.game_objects_list)
 
     def turn(self, next_coord):
         """"""
@@ -92,15 +113,16 @@ class Ai:
 
         while True:
             path = self.find_shortest_path(
-                self.tank.get_pos(), Vec2d(4, 4))
-            path = self.shorten_path(path)
-            path.popleft()
-
+                self.tank.get_pos(),
+                self.get_target_tile())
             if not path:
                 yield
                 continue  # Start from the top of our cycle
 
-            next_coord = path.popleft() + Vec2d(0.5, 0.5)
+            path = self.shorten_path(path)
+            path.popleft()
+
+            next_coord = path.popleft() + pym.Vec2d(0.5, 0.5)
             self.tank.stop_moving()
             yield
 
@@ -170,7 +192,7 @@ class Ai:
         else:
             self.get_flag()  # Ensure that we have initialized it.
             x, y = self.flag.x, self.flag.y
-        return Vec2d(int(x), int(y))
+        return pym.Vec2d(int(x), int(y))
 
     def get_flag(self):
         """ This has to be called to get the flag, since we don't know
@@ -179,7 +201,7 @@ class Ai:
         if self.flag == None:
             # Find the flag in the game objects list
             for obj in self.game_objects_list:
-                if isinstance(obj, gameobjects.Flag):
+                if isinstance(obj, gameobj.Flag):
                     self.flag = obj
                     break
         return self.flag
@@ -187,7 +209,7 @@ class Ai:
     def get_tile_of_position(self, position_vector):
         """ Converts and returns the float position of our tank to an integer position. """
         x, y = position_vector
-        return Vec2d(int(x), int(y))
+        return pym.Vec2d(int(x), int(y))
 
     def get_tile_neighbors(self, coord_vec):
         """ Returns all bordering grid squares of the input coordinate.
@@ -197,10 +219,10 @@ class Ai:
         pos_vec = self.get_tile_of_position(coord_vec)
         # Find the coordinates of the tiles' four neighbors
         neighbors = [
-            pos_vec + Vec2d(0, -1),
-            pos_vec + Vec2d(-1, 0),
-            pos_vec + Vec2d(0, 1),
-            pos_vec + Vec2d(1, 0)]
+            pos_vec + pym.Vec2d(0, -1),
+            pos_vec + pym.Vec2d(-1, 0),
+            pos_vec + pym.Vec2d(0, 1),
+            pos_vec + pym.Vec2d(1, 0)]
 
         return filter(self.filter_tile_neighbors, neighbors)
 
@@ -211,8 +233,12 @@ class Ai:
         if not (x_in_bounds and y_in_bounds):
             return False
 
-        box_is_grass = self.currentmap.boxAt(coord.x, coord.y) == 0
-        return box_is_grass
+        box_type = self.currentmap.boxAt(coord.x, coord.y)
+        box_is_wood = box_type == gameobj.Box.WOODBOX_TYPE
+        box_is_grass = box_type == gameobj.Box.GRASS_TYPE
+        box_is_metal = box_type == gameobj.Box.METALBOX_TYPE
+
+        return box_is_grass or box_is_wood or box_is_metal
 
 
 SimpleAi = Ai  # Legacy

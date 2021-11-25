@@ -120,7 +120,7 @@ class Tank(GamePhysicsObject):
             self.start_position - self.body.position).length < 0.2
 
     def shoot(self, space, game_objects):
-        """ Call this function to shoot a missile (current implementation does nothing ! you need to implement it yourself) """
+        """ Call this function to shoot a missile """
         if self.shoot_wait > 0:
             return
 

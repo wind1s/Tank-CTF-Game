@@ -1,7 +1,7 @@
 from os import remove
 
 from pymunk.vec2d import Vec2d
-import initgame as init
+import ctfgame as init
 import gameobjects as gameobj
 import images as img
 import createobjects as cobj

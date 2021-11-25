@@ -60,8 +60,8 @@ class Ai:
             or a wooden box is found, then we shoot.
         """
         start = self.find_target_point(
-            self.tank.body.position, self.tank.body.angle, 0.5)
-        end = self.find_target_point(start, self.tank.body.angle, 9)
+            self.tank.get_pos(), self.tank.get_angle(), 0.5)
+        end = self.find_target_point(start, self.tank.get_angle(), 9)
         type_hit = self.space.segment_query_first(
             start, end, 0, pym.ShapeFilter())
 
@@ -103,7 +103,7 @@ class Ai:
 
     def correct_pos(self, next_coord):
         # Add random value to make ai's movement different.
-        return self.tank.body.position.get_distance(next_coord) <= (
+        return self.tank.get_pos().get_distance(next_coord) <= (
             MIN_POS_DIFF + random()/10)
 
     def move_cycle_gen(self):

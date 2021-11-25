@@ -1,5 +1,5 @@
 import pygame as pyg
-from initgame import *
+from ctfgame import *
 
 # Import from the ctf framework
 import keyevent

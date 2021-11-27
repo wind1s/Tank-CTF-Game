@@ -1,12 +1,8 @@
 from baseobjects import (GamePhysicsObject, GameVisibleObject)
 import images as img
-import pymunk as pym
 import math
-
-
-def clamp(min_max, value):
-    """ Convenient helper function to bound a value to a specific interval. """
-    return min(max(-min_max, value), min_max)
+import pymunk as pym
+import utility
 
 
 class Tank(GamePhysicsObject):
@@ -14,10 +10,11 @@ class Tank(GamePhysicsObject):
 
     # Constant values for the tank, acessed like: Tank.ACCELERATION
     # You can add more constants here if needed later
+    COLLISION_TYPE = 2
     ACCELERATION = 1
     NORMAL_MAX_SPEED = 4
     FLAG_MAX_SPEED = NORMAL_MAX_SPEED * 0.5
-    SHOOT_COOLDOWN_MS = 0.5 * 1000.0
+    SHOOT_COOLDOWN_MS = 1.5 * 1000.0
 
     def __init__(self, x, y, orientation, sprite, space):
         super().__init__(x, y, orientation, sprite, space, True)
@@ -32,8 +29,8 @@ class Tank(GamePhysicsObject):
         self.start_position = pym.Vec2d(x, y)
         self.start_orientation = orientation
 
-        self.shape.collision_type = 2
-        self.shoot_wait = 0
+        self.shape.collision_type = Tank.COLLISION_TYPE
+        self.shoot_cooldown = 0
 
     def accelerate(self):
         """ Call this function to make the tank move forward. """
@@ -71,18 +68,19 @@ class Tank(GamePhysicsObject):
         self.body.velocity += acceleration_vector
 
         # Makes sure that we dont exceed our speed limit
-        velocity = clamp(self.max_speed, self.body.velocity.length)
+        velocity = utility.clamp(self.max_speed, self.body.velocity.length)
         self.body.velocity = pym.Vec2d(
             velocity, 0).rotated(
             self.body.velocity.angle)
 
         # Updates the rotation
         self.body.angular_velocity += self.rotation * self.ACCELERATION
-        self.body.angular_velocity = clamp(
+        self.body.angular_velocity = utility.clamp(
             self.max_speed, self.body.angular_velocity)
 
-    def post_update(self):
+    def post_update(self, clock):
         # If the tank carries the flag, then update the positon of the flag
+        self.update_cooldown(clock)
         if(self.flag != None):
             self.flag.x = self.body.position[0]
             self.flag.y = self.body.position[1]
@@ -93,7 +91,7 @@ class Tank(GamePhysicsObject):
 
     def update_cooldown(self, clock):
         # Reduce timers by time this tick took.
-        self.shoot_wait -= clock.get_time() if self.shoot_wait >= 0 else 0
+        self.shoot_cooldown -= clock.get_time() if self.shoot_cooldown >= 0 else 0
 
     def try_grab_flag(self, flag):
         """ Call this function to try to grab the flag, if the flag is not on other tank
@@ -121,10 +119,10 @@ class Tank(GamePhysicsObject):
 
     def shoot(self, space, game_objects):
         """ Call this function to shoot a missile """
-        if self.shoot_wait > 0:
+        if self.shoot_cooldown > 0:
             return
 
-        self.shoot_wait = self.SHOOT_COOLDOWN_MS
+        self.shoot_cooldown = self.SHOOT_COOLDOWN_MS
         offset_vector = pym.Vec2d(0, 0.5).rotated(self.body.angle)
         bullet_x = self.body.position[0] + offset_vector.x
         bullet_y = self.body.position[1] + offset_vector.y
@@ -132,11 +130,8 @@ class Tank(GamePhysicsObject):
 
         game_objects.append(
             Bullet(
-                self, bullet_x, bullet_y, orientation, 3.5, img.bullet,
+                self, bullet_x, bullet_y, orientation, Bullet.MAX_SPEED, img.bullet_img,
                 space))
-
-    def get_shot(self):
-        pass
 
     def respawn(self):
         self.try_drop_flag()
@@ -147,10 +142,13 @@ class Tank(GamePhysicsObject):
         self.stop_moving()
         self.stop_turning()
 
-        self.set_pos(start_x, start_y, start_angle)
+        self.set_pos(start_x, start_y)
+        self.set_angle(start_angle)
 
-    def set_pos(self, x, y, angle):
+    def set_pos(self, x, y):
         self.body.position = pym.Vec2d(x, y)
+
+    def set_angle(self, angle):
         self.body.angle = angle
 
     def get_pos(self):
@@ -161,18 +159,18 @@ class Tank(GamePhysicsObject):
 
 
 class Bullet(GamePhysicsObject):
+    COLLISION_TYPE = 1
+    MAX_SPEED = 4
 
     def __init__(self, tank, x, y, orientation, speed, sprite, space):
         super().__init__(x, y, orientation, sprite, space, True)
-        # Define variable used to apply motion to the tanks
 
         self.tank = tank
-        self.speed = speed  # Impose a maximum speed to the tank
-        # Define the start position, which is also the position where the tank has to return with the flag
+        self.speed = speed
         self.start_position = pym.Vec2d(x, y)
         self.body.angle = orientation
 
-        self.shape.collision_type = 1
+        self.shape.collision_type = Bullet.COLLISION_TYPE
 
     def update(self):
         """ A function to update the objects coordinates. Gets called at every tick of the game. """
@@ -180,13 +178,25 @@ class Bullet(GamePhysicsObject):
         # Creates a vector in the direction we want accelerate / decelerate
         speed_vector = pym.Vec2d(
             0, self.speed).rotated(self.body.angle)
-        # Applies the vector to our velocity
+
         self.body.velocity += speed_vector
+
+    def set_velocity(self, velocity):
+        self.body.velocity = pym.Vec2d(0, velocity)
+
+    def set_angle(self, angle):
+        self.body.angle = angle
+
+    def get_pos(self):
+        return self.body.position
+
+    def get_angle(self):
+        return self.body.angle
 
 
 class Box(GamePhysicsObject):
     """ This class extends the GamePhysicsObject to handle box objects. """
-
+    COLLISION_TYPE = 3
     GRASS_TYPE = 0
     ROCKBOX_TYPE = 1
     WOODBOX_TYPE = 2
@@ -197,17 +207,7 @@ class Box(GamePhysicsObject):
         super().__init__(x, y, 0, sprite, space, movable)
         self.destructable = destructable
         self.box_type = box_type
-        self.shape.collision_type = 3
-
-
-def get_box_with_type(x, y, box_type, space):
-    (x, y) = (x + 0.5, y + 0.5)  # Offsets the coordinate to the center of the tile
-    if box_type == 1:  # Creates a non-movable non-destructable rockbox
-        return Box(x, y, img.rockbox, False, space, False, Box.ROCKBOX_TYPE)
-    if box_type == 2:  # Creates a movable destructable woodbox
-        return Box(x, y, img.woodbox, True, space, True, Box.WOODBOX_TYPE)
-    if box_type == 3:  # Creates a movable non-destructable metalbox
-        return Box(x, y, img.metalbox, True, space, False, Box.METALBOX_TYPE)
+        self.shape.collision_type = Box.COLLISION_TYPE
 
 
 class Flag(GameVisibleObject):
@@ -215,9 +215,27 @@ class Flag(GameVisibleObject):
 
     def __init__(self, x, y):
         self.is_on_tank = False
-        super().__init__(x, y, img.flag)
+        super().__init__(x, y, img.flag_img)
 
 
 class Base(GameVisibleObject):
     def __init__(self, x, y, sprite):
         super().__init__(x, y, sprite)
+
+
+class Explosion(GameVisibleObject):
+    def __init__(self, x, y, sprite, game_objects):
+        super().__init__(x, y, sprite)
+        self.explosion_time = 0.7 * 1000  # time in milliseconds
+        self.game_objects = game_objects
+
+    def post_update(self, clock):
+        self.update_explosion(clock)
+
+    def update_explosion(self, clock):
+        """ Updates the explosion timer and removes it if timer expires. """
+        # Reduce timers by time this tick took.
+        if self.explosion_time >= 0:
+            self.explosion_time -= clock.get_time()
+        else:
+            self.game_objects.remove(self)

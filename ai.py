@@ -1,33 +1,20 @@
 import math
 import pymunk as pym
-import gameobjects as gameobj
-from collections import deque
-from random import random
+import gameobjects as gobj
+import collections as coll
+import random as rand
+import utility
 
 # NOTE: use only 'map0' during development!
-
-# 3 degrees, a bit more than we can turn each tick
-MIN_ANGLE_DIF = math.radians(2)
-MIN_POS_DIFF = 0.1
-
-
-def angle_between_vectors(vec1, vec2):
-    """ Since Vec2d operates in a cartesian coordinate space we have to
-        convert the resulting vector to get the correct angle for our space.
-    """
-    vec = vec1 - vec2
-    vec = vec.perpendicular()
-    return vec.angle
-
-
-def periodic_difference_of_angles(angle1, angle2):
-    return (angle1 % (2*math.pi)) - (angle2 % (2*math.pi))
 
 
 class Ai:
     """ A simple ai that finds the shortest path to the target using
     a breadth first search. Also capable of shooting other tanks and or wooden
     boxes. """
+
+    MIN_ANGLE_DIF = math.radians(2)
+    MIN_POS_DIFF = 0.1
 
     def __init__(self, tank,  game_objects_list, tanks_list, space, currentmap):
         self.tank = tank
@@ -39,12 +26,8 @@ class Ai:
         self.MAX_X = currentmap.width - 1
         self.MAX_Y = currentmap.height - 1
 
-        self.path = deque()
+        self.path = coll.deque()
         self.move_cycle = self.move_cycle_gen()
-
-    def update_grid_pos(self):
-        """ This should only be called in the beginning, or at the end of a move_cycle. """
-        self.grid_pos = self.get_tile_of_position(self.tank.body.position)
 
     def decide(self):
         """ Main decision function that gets called on every tick of the game. """
@@ -61,7 +44,9 @@ class Ai:
         """
         start = self.find_target_point(
             self.tank.get_pos(), self.tank.get_angle(), 0.5)
-        end = self.find_target_point(start, self.tank.get_angle(), 9)
+        end = self.find_target_point(
+            start, self.tank.get_angle(),
+            max(self.MAX_X, self.MAX_Y))
         type_hit = self.space.segment_query_first(
             start, end, 0, pym.ShapeFilter())
 
@@ -71,19 +56,18 @@ class Ai:
 
             parent = type_hit.shape.parent
 
-            if isinstance(parent, gameobj.Tank) or (
-                    isinstance(parent, gameobj.Box) and (parent.box_type ==
-                                                         gameobj.Box.WOODBOX_TYPE or parent.box_type ==
-                                                         gameobj.Box.METALBOX_TYPE)):
+            if isinstance(parent, gobj.Tank) or (
+                    isinstance(parent, gobj.Box) and parent.box_type
+                    in (gobj.Box.WOODBOX_TYPE, gobj.Box.METALBOX_TYPE)):
                 self.tank.shoot(self.space, self.game_objects_list)
 
     def turn(self, next_coord):
         """"""
 
-        target_angle = angle_between_vectors(
+        target_angle = utility.angle_between_vectors(
             self.tank.get_pos(), next_coord)
 
-        current_diff = periodic_difference_of_angles(
+        current_diff = utility.periodic_difference_of_angles(
             self.tank.get_angle(), target_angle)
 
         if current_diff > 0:
@@ -92,19 +76,25 @@ class Ai:
             self.tank.turn_right()
 
     def correct_angle(self, next_coord):
-        target_angle = angle_between_vectors(
+        def generate_angle_diff():
+            """ Adds a random value to position diff to make ai more human. """
+            return Ai.MIN_ANGLE_DIF + math.radians(rand.random())
+
+        target_angle = utility.angle_between_vectors(
             self.tank.get_pos(), next_coord)
 
-        current_diff = periodic_difference_of_angles(
+        current_diff = utility.periodic_difference_of_angles(
             self.tank.get_angle(), target_angle)
 
         # Add random value to make ai's movement different.
-        return abs(current_diff) <= (MIN_ANGLE_DIF + math.radians(random()))
+        return abs(current_diff) <= generate_angle_diff()
 
     def correct_pos(self, next_coord):
-        # Add random value to make ai's movement different.
-        return self.tank.get_pos().get_distance(next_coord) <= (
-            MIN_POS_DIFF + random()/10)
+        def generate_pos_diff():
+            """ Adds a random value to position diff to make ai more human. """
+            return Ai.MIN_POS_DIFF + rand.random()/10
+
+        return self.tank.get_pos().get_distance(next_coord) <= generate_pos_diff()
 
     def move_cycle_gen(self):
         """ A generator that iteratively goes through all the required steps
@@ -142,7 +132,7 @@ class Ai:
             self.tank.stop_moving()
 
     def shorten_path(self, path):
-        new_path = deque()
+        new_path = coll.deque()
 
         def path_tile_is_turn(i):
             return path[i-1].x != path[i+1].x and path[i-1].y != path[i+1].y
@@ -158,10 +148,9 @@ class Ai:
         """ A simple Breadth First Search using integer coordinates as our nodes.
             Edges are calculated as we go, using an external function.
         """
-        origin = self.get_tile_of_position(origin)
-        shortest_path = []
+        origin = utility.get_tile_position(origin)
         paths = {origin.int_tuple: [origin]}
-        queue = deque([origin])
+        queue = coll.deque([origin])
         visited = set()
 
         while queue:
@@ -170,7 +159,7 @@ class Ai:
             if node == target:
                 shortest_path = paths[node.int_tuple].copy()
                 shortest_path.append(node)
-                break
+                return coll.deque(shortest_path)
 
             for neighbor in self.get_tile_neighbors(node):
                 if neighbor.int_tuple not in visited:
@@ -181,13 +170,13 @@ class Ai:
 
             del paths[node.int_tuple]
 
-        return deque(shortest_path)
+        return coll.deque([])
 
     def get_target_tile(self):
         """ Returns position of the flag if we don't have it. If we do have the flag,
             return the position of our home base.
         """
-        if self.tank.flag != None:
+        if self.tank.flag is not None:
             x, y = self.tank.start_position
         else:
             self.get_flag()  # Ensure that we have initialized it.
@@ -198,25 +187,20 @@ class Ai:
         """ This has to be called to get the flag, since we don't know
             where it is when the Ai object is initialized.
         """
-        if self.flag == None:
+        if self.flag is None:
             # Find the flag in the game objects list
             for obj in self.game_objects_list:
-                if isinstance(obj, gameobj.Flag):
+                if isinstance(obj, gobj.Flag):
                     self.flag = obj
                     break
         return self.flag
-
-    def get_tile_of_position(self, position_vector):
-        """ Converts and returns the float position of our tank to an integer position. """
-        x, y = position_vector
-        return pym.Vec2d(int(x), int(y))
 
     def get_tile_neighbors(self, coord_vec):
         """ Returns all bordering grid squares of the input coordinate.
             A bordering square is only considered accessible if it is grass
             or a wooden box.
         """
-        pos_vec = self.get_tile_of_position(coord_vec)
+        pos_vec = utility.get_tile_position(coord_vec)
         # Find the coordinates of the tiles' four neighbors
         neighbors = [
             pos_vec + pym.Vec2d(0, -1),
@@ -234,11 +218,11 @@ class Ai:
             return False
 
         box_type = self.currentmap.boxAt(coord.x, coord.y)
-        box_is_wood = box_type == gameobj.Box.WOODBOX_TYPE
-        box_is_grass = box_type == gameobj.Box.GRASS_TYPE
-        box_is_metal = box_type == gameobj.Box.METALBOX_TYPE
+        box_is_wood = box_type == gobj.Box.WOODBOX_TYPE
+        box_is_grass = box_type == gobj.Box.GRASS_TYPE
+        box_is_metal = box_type == gobj.Box.METALBOX_TYPE
 
-        return box_is_grass or box_is_wood or box_is_metal
+        return box_is_grass or box_is_wood
 
 
 SimpleAi = Ai  # Legacy

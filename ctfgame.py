@@ -3,9 +3,9 @@
 from initdisplay import *
 import pygame as pyg
 import pymunk as pym
-import maps
 import createobjects as cobj
 import collision
+import maps
 
 
 FRAMERATE = 50
@@ -28,10 +28,9 @@ tanks = cobj.create_tanks(current_map, space)
 flag = cobj.create_flag(current_map)
 bases = cobj.create_bases(current_map)
 
-game_objects = boxes + [flag] + bases
+game_objects = [*boxes, *bases, flag]
 
 ai_objects = cobj.create_ai(tanks[1:], game_objects, space, current_map)
-
 
 """
 from createobjects import (

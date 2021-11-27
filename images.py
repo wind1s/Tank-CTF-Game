@@ -1,40 +1,40 @@
-import pygame
-import os
+from pygame import (image, error, get_error, transform)
+from os import path
 
-main_dir = os.path.split(os.path.abspath(__file__))[0]
+main_dir = path.split(path.abspath(__file__))[0]
 
 
 def load_image(file):
     """ Load an image from the data directory. """
-    file = os.path.join(main_dir, 'data', file)
+    file = path.join(main_dir, 'data', file)
     try:
-        surface = pygame.image.load(file)
-    except pygame.error:
+        surface = image.load(file)
+    except error:
         raise SystemExit('Could not load image "%s" %s' %
-                         (file, pygame.get_error()))
+                         (file, get_error()))
     return surface.convert_alpha()
 
 
 TILE_SIZE = 40  # Define the default size of tiles
 
-explosion = load_image('explosion.png')  # Image of an explosion
+explosion_img = load_image('explosion.png')  # Image of an explosion
 
-grass = load_image('grass.png')  # Image of a grass tile
+grass_img = load_image('grass.png')  # Image of a grass tile
 
-rockbox = load_image('rockbox.png')  # Image of a rock box (wall)
+rockbox_img = load_image('rockbox.png')  # Image of a rock box (wall)
 
-metalbox = load_image('metalbox.png')  # Image of a metal box
+metalbox_img = load_image('metalbox.png')  # Image of a metal box
 
-woodbox = load_image('woodbox.png')  # Image of a wood box
+woodbox_img = load_image('woodbox.png')  # Image of a wood box
 
-flag = load_image('flag.png')  # Image of flag
+flag_img = load_image('flag.png')  # Image of flag
 
-bullet = load_image('bullet.png')
-bullet = pygame.transform.scale(bullet, (10, 10))
-bullet = pygame.transform.rotate(bullet, -90)
+bullet_img = load_image('bullet.png')
+bullet_img = transform.scale(bullet_img, (10, 10))
+bullet_img = transform.rotate(bullet_img, -90)
 
 # List of image of tanks of different colors
-tanks = [
+tank_images = [
     load_image('tank_orange.png'),
     load_image('tank_blue.png'),
     load_image('tank_white.png'),
@@ -43,7 +43,7 @@ tanks = [
     load_image('tank_gray.png')]
 
 # List of image of bases corresponding to the color of each tank
-bases = [
+base_images = [
     load_image('base_orange.png'),
     load_image('base_blue.png'),
     load_image('base_white.png'),

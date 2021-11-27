@@ -1,57 +1,72 @@
-from os import remove
-
-from pymunk.vec2d import Vec2d
-import ctfgame as init
-import gameobjects as gameobj
+import ctfgame
+import gameobjects as gobj
 import images as img
 import createobjects as cobj
 
 
-def remove_collision_object(obj, shape, space):
-    if obj in init.game_objects:
-        init.game_objects.remove(obj)
+def remove_object(obj, shape, space):
+    """ Removes a game object and it's body. """
+    if obj in ctfgame.game_objects:
+        ctfgame.game_objects.remove(obj)
     space.remove(shape, shape.body)
 
 
-def collision_bullet_tank(arb, space, _):
-    bullet_shape = arb.shapes[0]
-    tank_shape = arb.shapes[1]
+def collision_handler_generator(obj1_handler, obj2_handler):
+    """ Generates a collison handler for two objects using respective object collision handler. """
+    def collision_handler(arb, space, _):
+        shape1 = arb.shapes[0]
+        shape2 = arb.shapes[1]
+        obj1_handler(shape1, space)
+        obj2_handler(shape2, space)
 
-    bullet_shape.parent.body.velocity = Vec2d(0, 0)
-    remove_collision_object(bullet_shape.parent, bullet_shape, space)
-    tank_shape.parent.respawn()
+        return True
 
-    for ai in init.ai_objects:
-        if ai.tank is tank_shape.parent:
+    return collision_handler
+
+
+def collision_bullet(bullet_shape, space):
+    """ Handles bullet collisions. """
+    bullet = bullet_shape.parent
+    ctfgame.game_objects.append(gobj.Explosion(
+        *bullet.get_pos(), img.explosion_img, ctfgame.game_objects))
+
+    bullet.set_velocity(0)
+    remove_object(bullet, bullet_shape, space)
+
+    return True
+
+
+def collision_tank_bullet(tank_shape, *_):
+    """ Handles tank collision with bullets."""
+    tank = tank_shape.parent
+    tank.respawn()
+
+    for ai in ctfgame.ai_objects:
+        if ai.tank is tank:
             ai.move_cycle = ai.move_cycle_gen()
 
-    return True
 
+def collision_box_bullet(box_shape, space):
+    """ Handles box collision with bullets. """
+    box = box_shape.parent
+    box_collision_type = box.box_type
 
-def collision_bullet_box(arb, space, _):
-    bullet_shape = arb.shapes[0]
-    box_shape = arb.shapes[1]
-
-    remove_collision_object(bullet_shape.parent, bullet_shape, space)
-
-    box_collision_type = box_shape.parent.box_type
-    if box_collision_type == gameobj.Box.WOODBOX_TYPE:
-        remove_collision_object(box_shape.parent, box_shape, space)
-
-    return True
-
-
-def collision_bullet_wall(arb, space, _):
-    bullet_shape = arb.shapes[0]
-    remove_collision_object(bullet_shape.parent, bullet_shape, space)
-
-    return True
+    if box_collision_type == gobj.Box.WOODBOX_TYPE:
+        remove_object(box, box_shape, space)
 
 
 def add_collision_handlers(game_map, space):
     space.add(*cobj.create_map_bounds(game_map, space.static_body))
-    space.add_collision_handler(1, 2).pre_solve = collision_bullet_tank
-    space.add_collision_handler(1, 3).pre_solve = collision_bullet_box
-    space.add_collision_handler(1, 0).pre_solve = collision_bullet_wall
+    space.add_collision_handler(
+        gobj.Bullet.COLLISION_TYPE, gobj.Box.COLLISION_TYPE).pre_solve = collision_handler_generator(
+        collision_bullet, collision_box_bullet)
+    space.add_collision_handler(
+        gobj.Bullet.COLLISION_TYPE, gobj.Tank.COLLISION_TYPE).pre_solve = collision_handler_generator(
+        collision_bullet, collision_tank_bullet)
+
+    # Handler for map bounds.
+    space.add_collision_handler(
+        gobj.Bullet.COLLISION_TYPE, 0).pre_solve = collision_handler_generator(
+        collision_bullet, lambda *_: None)
 
     return space

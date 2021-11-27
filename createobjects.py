@@ -1,7 +1,8 @@
-from ai import Ai
-import gameobjects as gameobj
+import ai
+import gameobjects as obj
 import images as img
 import pygame as pyg
+import utility
 import pymunk as pym
 
 
@@ -14,7 +15,7 @@ def create_grass_background(current_map, screen):
             # contained in "images.grass" into the "background"
             # image at the coordinates given as the second argument
             background.blit(
-                img.grass, (x*img.TILE_SIZE, y*img.TILE_SIZE))
+                img.grass_img, (x*img.TILE_SIZE, y*img.TILE_SIZE))
 
     return background
 
@@ -30,7 +31,7 @@ def create_boxes(current_map, space):
             if(box_type != 0):
                 # Create a "Box" using the box_type, aswell as the x,y coordinates,
                 # and the pymunk space
-                box = gameobj.get_box_with_type(x, y, box_type, space)
+                box = utility.get_box_with_type(x, y, box_type, space)
                 boxes.append(box)
 
     return boxes
@@ -43,7 +44,7 @@ def create_tanks(current_map, space):
         # Get the starting position of the tank "i"
         pos = current_map.start_positions[i]
         # Create the tank, images.tanks contains the image representing the tank
-        tank = gameobj.Tank(pos[0], pos[1], pos[2], img.tanks[i], space)
+        tank = obj.Tank(pos[0], pos[1], pos[2], img.tank_images[i], space)
         # Add the tank to the list of tanks
         tanks.append(tank)
 
@@ -57,7 +58,7 @@ def create_bases(current_map):
         # Get the starting position of the tank "i"
         pos = current_map.start_positions[i]
         # Create the tank, images.tanks contains the image representing the tank
-        base = gameobj.Base(pos[0], pos[1], img.bases[i])
+        base = obj.Base(pos[0], pos[1], img.base_images[i])
         # Add the tank to the list of tanks
         bases.append(base)
 
@@ -65,7 +66,7 @@ def create_bases(current_map):
 
 
 def create_flag(current_map):
-    return gameobj.Flag(
+    return obj.Flag(
         current_map.flag_position[0],
         current_map.flag_position[1])
 
@@ -98,6 +99,6 @@ def create_map_bounds(current_map, body):
 def create_ai(tanks, game_objects, space, current_map):
     ai_list = []
     for tank in tanks:
-        ai_list.append(Ai(tank, game_objects, tanks, space, current_map))
+        ai_list.append(ai.Ai(tank, game_objects, tanks, space, current_map))
 
     return ai_list

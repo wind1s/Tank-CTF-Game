@@ -7,9 +7,9 @@ import keyevent
 
 def game_loop(mode):
     # Main Loop
-    # Control 
+    # Control
     # whether the game run
-    
+
     running = True
     skip_update = 0
 
@@ -19,8 +19,6 @@ def game_loop(mode):
     if mode == "--multiplayer":
         ai_objects.remove(ai_objects[-1])
         player2_tank = tanks[-1]
-
-    
 
     key_down_event_args = {
         pyg.K_UP: [player1_tank],
@@ -35,14 +33,16 @@ def game_loop(mode):
         pyg.K_x: [player2_tank, space, game_objects]
     }
 
-    key_up_event_args = {pyg.K_UP: [player1_tank],
-                         pyg.K_DOWN: [player1_tank],
-                         pyg.K_LEFT: [player1_tank],
-                         pyg.K_RIGHT: [player1_tank],
-                         pyg.K_w: [player2_tank],
-                         pyg.K_s: [player2_tank],
-                         pyg.K_a: [player2_tank],
-                         pyg.K_d: [player2_tank]}
+    key_up_event_args = {
+        pyg.K_UP: [player1_tank],
+        pyg.K_DOWN: [player1_tank],
+        pyg.K_LEFT: [player1_tank],
+        pyg.K_RIGHT: [player1_tank],
+        pyg.K_w: [player2_tank],
+        pyg.K_s: [player2_tank],
+        pyg.K_a: [player2_tank],
+        pyg.K_d: [player2_tank]
+    }
 
     while running:
         # Handle the events

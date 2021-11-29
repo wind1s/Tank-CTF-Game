@@ -82,7 +82,6 @@ class Tank(GamePhysicsObject):
         self.body.angular_velocity = utility.clamp(
             self.max_speed, self.body.angular_velocity)
 
-
     def post_update(self, clock):
         # If the tank carries the flag, then update the positon of the flag
         self.update_cooldown(clock)
@@ -128,7 +127,7 @@ class Tank(GamePhysicsObject):
             return
 
         sounds.shooting.play()
-        
+
         self.shoot_cooldown = self.SHOOT_COOLDOWN_MS
         offset_vector = pym.Vec2d(0, 0.5).rotated(self.body.angle)
         bullet_x = self.body.position[0] + offset_vector.x
@@ -215,7 +214,7 @@ class Box(GamePhysicsObject):
         """ It takes as arguments the coordinate of the starting position of the box (x,y) and the box model (boxmodel). """
         super().__init__(x, y, 0, sprite, space, movable)
         self.destructable = destructable
-        self.box_type = box_type    
+        self.box_type = box_type
         self.hit_points = Box.MAX_HIT_POINTS
         self.shape.collision_type = Box.COLLISION_TYPE
 

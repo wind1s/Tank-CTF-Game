@@ -4,6 +4,16 @@ import pymunk as pym
 import images as img
 
 
+def lookup_call(mapped_name, callback_table, args_table={}):
+    # Check if key has defined functionality.
+    if mapped_name in callback_table:
+        # Callback has supplied arguments.
+        if mapped_name in args_table:
+            callback_table[mapped_name](*args_table[mapped_name])
+        else:  # Callback has no arguments.
+            callback_table[mapped_name]()
+
+
 def clamp(min_max, value):
     """ Convenient helper function to bound a value to a specific interval. """
     return min(max(-min_max, value), min_max)

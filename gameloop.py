@@ -1,18 +1,26 @@
 import pygame as pyg
 from ctfgame import *
-
-# Import from the ctf framework
+import sounds
+import sys
 import keyevent
 
 
-def game_loop():
+def game_loop(mode):
     # Main Loop
-    # Control whether the game run
+    # Control 
+    # whether the game run
+    
     running = True
     skip_update = 0
 
     player1_tank = tanks[0]
-    player2_tank = tanks[1]
+    player2_tank = None
+
+    if mode == "--multiplayer":
+        ai_objects.remove(ai_objects[-1])
+        player2_tank = tanks[-1]
+
+    
 
     key_down_event_args = {
         pyg.K_UP: [player1_tank],
@@ -80,6 +88,7 @@ def game_loop():
         for i, tank in enumerate(tanks):
             tank.try_grab_flag(flag)
             if tank.has_won():
+                sounds.victory.play()
                 print(f"Tank {i} has won!")
                 running = False
 

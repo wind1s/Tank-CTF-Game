@@ -7,7 +7,6 @@ import createobjects as cobj
 import collision
 import maps
 
-
 FRAMERATE = 50
 
 # Initialise the clock
@@ -31,6 +30,7 @@ bases = cobj.create_bases(current_map)
 game_objects = [*boxes, *bases, flag]
 
 ai_objects = cobj.create_ai(tanks[1:], game_objects, space, current_map)
+
 
 """
 from createobjects import (

@@ -39,11 +39,14 @@ def collision_bullet(bullet_shape, space):
 def collision_tank_bullet(tank_shape, *_):
     """ Handles tank collision with bullets."""
     tank = tank_shape.parent
-    tank.respawn()
 
-    for ai in ctfgame.ai_objects:
-        if ai.tank is tank:
-            ai.move_cycle = ai.move_cycle_gen()
+    tank.hit_points -= 1
+    if tank.hit_points <= 0:
+        tank.respawn()
+
+        for ai in ctfgame.ai_objects:
+            if ai.tank is tank:
+                ai.move_cycle = ai.move_cycle_gen()
 
 
 def collision_box_bullet(box_shape, space):
@@ -52,7 +55,10 @@ def collision_box_bullet(box_shape, space):
     box_collision_type = box.box_type
 
     if box_collision_type == gobj.Box.WOODBOX_TYPE:
-        remove_object(box, box_shape, space)
+        box.hit_points -= 1
+        
+        if box.hit_points <= 0:
+            remove_object(box, box_shape, space)
 
 
 def add_collision_handlers(game_map, space):

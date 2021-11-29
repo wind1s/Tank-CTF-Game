@@ -3,6 +3,7 @@ import images as img
 import math
 import pymunk as pym
 import utility
+import sounds
 
 
 class Tank(GamePhysicsObject):
@@ -14,9 +15,9 @@ class Tank(GamePhysicsObject):
     ACCELERATION = 1
     NORMAL_MAX_SPEED = 4
     FLAG_MAX_SPEED = NORMAL_MAX_SPEED * 0.5
-    SHOOT_COOLDOWN_MS = 1.5 * 1000.0
+    SHOOT_COOLDOWN_MS = 0.5 * 1000.0
 
-    def __init__(self, x, y, orientation, sprite, space):
+    def __init__(self, x, y, orientation, sprite, space, hit_points):
         super().__init__(x, y, orientation, sprite, space, True)
         # Define variable used to apply motion to the tanks
         self.acceleration = 0  # 1 forward, 0 for stand still, -1 for backwards
@@ -31,6 +32,9 @@ class Tank(GamePhysicsObject):
 
         self.shape.collision_type = Tank.COLLISION_TYPE
         self.shoot_cooldown = 0
+
+        self.max_hit_points = hit_points
+        self.hit_points = hit_points
 
     def accelerate(self):
         """ Call this function to make the tank move forward. """
@@ -78,6 +82,7 @@ class Tank(GamePhysicsObject):
         self.body.angular_velocity = utility.clamp(
             self.max_speed, self.body.angular_velocity)
 
+
     def post_update(self, clock):
         # If the tank carries the flag, then update the positon of the flag
         self.update_cooldown(clock)
@@ -122,6 +127,8 @@ class Tank(GamePhysicsObject):
         if self.shoot_cooldown > 0:
             return
 
+        sounds.shooting.play()
+        
         self.shoot_cooldown = self.SHOOT_COOLDOWN_MS
         offset_vector = pym.Vec2d(0, 0.5).rotated(self.body.angle)
         bullet_x = self.body.position[0] + offset_vector.x
@@ -134,6 +141,8 @@ class Tank(GamePhysicsObject):
                 space))
 
     def respawn(self):
+        self.hit_points = self.max_hit_points
+
         self.try_drop_flag()
 
         start_x = self.start_position[0]
@@ -169,7 +178,6 @@ class Bullet(GamePhysicsObject):
         self.speed = speed
         self.start_position = pym.Vec2d(x, y)
         self.body.angle = orientation
-
         self.shape.collision_type = Bullet.COLLISION_TYPE
 
     def update(self):
@@ -201,12 +209,14 @@ class Box(GamePhysicsObject):
     ROCKBOX_TYPE = 1
     WOODBOX_TYPE = 2
     METALBOX_TYPE = 3
+    MAX_HIT_POINTS = 2
 
     def __init__(self, x, y, sprite, movable, space, destructable, box_type):
         """ It takes as arguments the coordinate of the starting position of the box (x,y) and the box model (boxmodel). """
         super().__init__(x, y, 0, sprite, space, movable)
         self.destructable = destructable
-        self.box_type = box_type
+        self.box_type = box_type    
+        self.hit_points = Box.MAX_HIT_POINTS
         self.shape.collision_type = Box.COLLISION_TYPE
 
 

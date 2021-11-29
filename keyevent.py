@@ -49,7 +49,7 @@ def key_up_event(event_key, callback_args):
 
 def key_down_k_x(tank, *shoot_args):
     """ Performs key down x keybinding functionality. """
-    key_down_k_space(tank, shoot_args)
+    key_down_k_space(tank, *shoot_args)
 
 
 def key_down_k_space(tank, *shoot_args):

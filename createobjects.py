@@ -44,7 +44,7 @@ def create_tanks(current_map, space):
         # Get the starting position of the tank "i"
         pos = current_map.start_positions[i]
         # Create the tank, images.tanks contains the image representing the tank
-        tank = obj.Tank(pos[0], pos[1], pos[2], img.tank_images[i], space)
+        tank = obj.Tank(pos[0], pos[1], pos[2], img.tank_images[i], space, 3)
         # Add the tank to the list of tanks
         tanks.append(tank)
 

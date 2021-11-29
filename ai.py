@@ -222,7 +222,7 @@ class Ai:
         box_is_grass = box_type == gobj.Box.GRASS_TYPE
         box_is_metal = box_type == gobj.Box.METALBOX_TYPE
 
-        return box_is_grass or box_is_wood
+        return box_is_grass or box_is_wood or box_is_metal
 
 
 SimpleAi = Ai  # Legacy

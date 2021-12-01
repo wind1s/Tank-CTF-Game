@@ -16,10 +16,9 @@ class Ai:
     MIN_ANGLE_DIF = math.radians(2)
     MIN_POS_DIFF = 0.1
 
-    def __init__(self, tank,  game_objects_list, tanks_list, space, currentmap):
+    def __init__(self, tank, game_objects_list, space, currentmap):
         self.tank = tank
         self.game_objects_list = game_objects_list
-        self.tanks_list = tanks_list
         self.space = space
         self.currentmap = currentmap
         self.flag = None

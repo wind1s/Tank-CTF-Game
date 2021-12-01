@@ -32,6 +32,11 @@ def periodic_difference_of_angles(angle1, angle2):
     return (angle1 % (2*math.pi)) - (angle2 % (2*math.pi))
 
 
+def physics_to_display(x):
+    """ This function is used to convert coordinates in the physic engine into the display coordinates """
+    return x * img.TILE_SIZE
+
+
 def get_tile_position(position_vector):
     """ Converts and returns the float position of our tank to an integer position. """
     x, y = position_vector

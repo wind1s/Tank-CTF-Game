@@ -99,6 +99,6 @@ def create_map_bounds(current_map, body):
 def create_ai(tanks, game_objects, space, current_map):
     ai_list = []
     for tank in tanks:
-        ai_list.append(ai.Ai(tank, game_objects, tanks, space, current_map))
+        ai_list.append(ai.Ai(tank, game_objects, space, current_map))
 
     return ai_list

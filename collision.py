@@ -61,11 +61,12 @@ def collision_box_bullet(box_shape, physics_objects, space):
             remove_object(box, box_shape, physics_objects, space)
 
 
-def add_collision_handlers(game_map, physics_objects, space):
-    space.add(*cobj.create_map_bounds(game_map, space.static_body))
+def add_collision_handlers(physics_objects, space):
+
     space.add_collision_handler(
         gobj.Bullet.COLLISION_TYPE, gobj.Box.COLLISION_TYPE).pre_solve = collision_handler_generator(
         collision_bullet, collision_box_bullet, physics_objects)
+
     space.add_collision_handler(
         gobj.Bullet.COLLISION_TYPE, gobj.Tank.COLLISION_TYPE).pre_solve = collision_handler_generator(
         collision_bullet, collision_tank_bullet, physics_objects)

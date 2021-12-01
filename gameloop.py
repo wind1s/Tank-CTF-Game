@@ -1,7 +1,6 @@
-import pygame as pyg
 from ctfgame import *
+import pygame as pyg
 import sounds
-import sys
 import keyevent
 
 

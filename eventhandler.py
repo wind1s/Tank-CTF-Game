@@ -1,11 +1,8 @@
-from keyaction import KeyAction
-import ctfgame
 import pygame as pyg
-import keyaction
 
 
-class EventHandler(ctfgame.CTFGame):
-    def __init__(self, game_mode):
+class EventHandler():
+    def __init__(self, game_mode, keyaction):
 
         self.game_mode = game_mode
 
@@ -15,7 +12,7 @@ class EventHandler(ctfgame.CTFGame):
             pyg.KEYUP: self.event_keyup
         }
 
-        self.keyaction = keyaction.KeyAction(game_mode)
+        self.keyaction = keyaction
 
     def handle_events(self, pygame_event):
         """ Handles all game events. """
@@ -28,9 +25,9 @@ class EventHandler(ctfgame.CTFGame):
 
                 event_callback(event)
 
-    def event_quit(self, _):
+    def event_quit(self, event):
         """ Quits the game. """
-        self.running = False
+        return False
 
     def event_keydown(self, event):
         """ Hanldes key down events. """

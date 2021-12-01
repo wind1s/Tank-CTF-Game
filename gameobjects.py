@@ -121,7 +121,7 @@ class Tank(GamePhysicsObject):
         return self.flag != None and (
             self.start_position - self.body.position).length < 0.2
 
-    def shoot(self, space, game_objects):
+    def shoot(self, space, physics_objects):
         """ Call this function to shoot a missile """
         if self.shoot_cooldown > 0:
             return
@@ -134,10 +134,10 @@ class Tank(GamePhysicsObject):
         bullet_y = self.body.position[1] + offset_vector.y
         orientation = self.body.angle
 
-        game_objects.append(
+        physics_objects.append(
             Bullet(
-                self, bullet_x, bullet_y, orientation, Bullet.MAX_SPEED, img.bullet_img,
-                space))
+                self, bullet_x, bullet_y, orientation,
+                Bullet.MAX_SPEED, img.bullet_img, space))
 
     def respawn(self):
         self.hit_points = self.max_hit_points

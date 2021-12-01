@@ -57,7 +57,8 @@ class CTFGame:
         self.tanks = cobj.create_tanks(self.current_map, self.space)
         self.flag = cobj.create_flag(self.current_map)
         self.bases = cobj.create_bases(self.current_map)
-        self.game_objects = [*self.boxes, *self.bases, self.flag]
+        self.physics_objects = [*self.boxes, *self.tanks]
+        self.visible_objects = [*self.bases, self.flag]
 
         self.space = collision.add_collision_handlers(
             self.current_map, self.game_objects, self.space)
@@ -67,8 +68,8 @@ class CTFGame:
             self.tanks[1:],
             self.game_objects, self.space, self.current_map)
 
-        player1_tank = tanks[0]
-        player2_tank = None
+        self.player1_tank = tanks[0]
+        self.player2_tank = None
 
         if mode == "--multiplayer":
             ai_objects.remove(ai_objects[-1])

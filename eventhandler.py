@@ -1,4 +1,5 @@
 import pygame as pyg
+from collections import Hashable
 
 
 class EventHandler():
@@ -17,11 +18,12 @@ class EventHandler():
     def handle_events(self, pygame_event):
         """ Handles all game events. """
         for event in pygame_event.get():
-
+            # isinstance(event, Hashable) and
             # Check if key has defined functionality.
-            if event in self.event_mapping:
+            event_type = event.type
+            if event_type in self.event_mapping:
                 # Callback has supplied arguments.
-                event_callback = self.event_mapping[event]
+                event_callback = self.event_mapping[event_type]
 
                 event_callback(event)
 

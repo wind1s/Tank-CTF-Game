@@ -25,7 +25,9 @@ class Tank(GamePhysicsObject):
         self.body.angular_velocity = 0
 
         self.flag = None                      # This variable is used to access the flag object, if the current tank is carrying the flag
-        self.max_speed = Tank.NORMAL_MAX_SPEED     # Impose a maximum speed to the tank
+        self.max_speed = Tank.NORMAL_MAX_SPEED
+        self.bullet_max_speed = Bullet.MAX_SPEED
+
         # Define the start position, which is also the position where the tank has to return with the flag
         self.start_position = pym.Vec2d(x, y)
         self.start_orientation = orientation
@@ -137,7 +139,7 @@ class Tank(GamePhysicsObject):
         physics_objects.append(
             Bullet(
                 self, bullet_x, bullet_y, orientation,
-                Bullet.MAX_SPEED, img.bullet_img, space))
+                self.bullet_max_speed, img.bullet_img, space))
 
     def respawn(self):
         self.hit_points = self.max_hit_points

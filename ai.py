@@ -28,6 +28,10 @@ class Ai:
         self.path = coll.deque()
         self.move_cycle = self.move_cycle_gen()
 
+        # Buff tanks.
+        self.tank.max_speed = self.tank.max_speed*1.3
+        self.tank.bullet_max_speed = self.tank.bullet_max_speed*1.7
+
     def decide(self):
         """ Main decision function that gets called on every tick of the game. """
         next(self.move_cycle)

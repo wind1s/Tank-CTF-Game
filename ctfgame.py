@@ -62,6 +62,7 @@ class CTFGame:
         self.space = pym.Space()
         self.space.gravity = (0.0,  0.0)
         self.space.damping = 0.1  # Adds friction to the ground for all objects
+        self.skip_update = 0
 
         # Create game objects.
         self.boxes = cobj.create_boxes(self.current_map, self.space)
@@ -110,61 +111,69 @@ class CTFGame:
         self.running = False
 
     def run_loop(self):
-        skip_update = 0
-
-        def update_objects(objects):
-            # Update physics.
-            if skip_update == 0:
-                # Loop over all the physics objects and update their speed in function of their
-                # acceleration.
-                for obj in objects:
-                    obj.update()
-
-                skip_update = 2
-            else:
-                skip_update -= 1
-
-        def post_update_objects(objects):
-            for index, obj in enumerate(objects):
-
-                if isinstance(obj, gobj.Tank):
-                    obj.try_grab_flag(flag)
-
-                    if obj.has_won():
-                        sounds.victory.play()
-                        print(f"Tank {index} has won!")
-                        self.quit_game()
-
-                obj.post_update(clock)
-
-        def screen_update_objects(objects):
-            for obj in objects:
-                obj.update_screen(obj)
-
         while self.running:
             self.event_handler.handle_events(pyg.event)
 
-            # Decide what the ai should do.
-            for ai_obj in ai_objects:
-                ai_obj.decide()
-
-            update_objects(self.physics_objects + self.visible_objects)
+            # Update physics of objects. Change speed, pos, acceleration etc.
+            self.update_objects()
 
             # Check collisions and update the objects position
-            space.step(1 / FRAMERATE)
+            space.step(1 / CTFGame.FRAMERATE)
 
             # Update object that depends on an other object position (for instance a flag)
-            post_update_objects(self.physics_objects + self.visible_objects)
+            self.post_update_objects()
 
             # Update Display
             # Display the background on the screen
             screen.blit(background, (0, 0))
 
             # Update the display of the game objects on the screen
-            screen_update_objects(self.physics_objects + self.visible_objects)
+            self.screen_update_objects()
 
             # Redisplay the entire screen (see double buffer technique)
             pyg.display.flip()
 
             # Control the game framerate
             clock.tick(FRAMERATE)
+
+    def update_objects(self):
+        """ Updates the physics of all objects. """
+        if self.skip_update == 0:
+            for obj in self.physics_objects:
+                obj.update()
+
+            for obj in self.visible_objects:
+                obj.update()
+
+            self.skip_update = 2
+        else:
+            self.skip_update -= 1
+
+    def post_update_objects(self):
+        """ Does post updating of all objects. """
+        objects = self.physics_objects + self.visible_objects
+
+        for index, obj in enumerate(objects):
+
+            if isinstance(obj, gobj.Tank):
+                obj.try_grab_flag(flag)
+
+                if obj.has_won():
+                    sounds.victory.play()
+                    print(f"Tank {index} has won!")
+                    self.quit_game()
+
+            obj.post_update(self.clock)
+
+    def screen_update_objects(self):
+        """ Updates the screen with changes to all objects. """
+        for obj in self.physics_objects:
+            obj.update_screen()
+
+        for obj in self.visible_objects:
+            obj.update_screen()
+
+    def update_ai_decision(self):
+        """ Updated the next decision of ai's. """
+        for ai_obj in ai_objects:
+            ai_obj.decide()

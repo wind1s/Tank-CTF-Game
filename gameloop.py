@@ -1,7 +1,6 @@
 from ctfgame import *
 import pygame as pyg
 import sounds
-import keyevent
 
 
 def game_loop(mode):
@@ -12,52 +11,24 @@ def game_loop(mode):
     running = True
     skip_update = 0
 
-    player1_tank = tanks[0]
+    player1_tank = None
     player2_tank = None
 
-    if mode == "--multiplayer":
+    if mode == "--singleplayer":
+        player1_tank = tanks[0]
+
+    elif mode == "--multiplayer":
         ai_objects.remove(ai_objects[-1])
         player2_tank = tanks[-1]
 
-    key_down_event_args = {
-        pyg.K_UP: [player1_tank],
-        pyg.K_DOWN: [player1_tank],
-        pyg.K_LEFT: [player1_tank],
-        pyg.K_RIGHT: [player1_tank],
-        pyg.K_SPACE: [player1_tank, space, game_objects],
-        pyg.K_w: [player2_tank],
-        pyg.K_s: [player2_tank],
-        pyg.K_a: [player2_tank],
-        pyg.K_d: [player2_tank],
-        pyg.K_x: [player2_tank, space, game_objects]
-    }
-
-    key_up_event_args = {
-        pyg.K_UP: [player1_tank],
-        pyg.K_DOWN: [player1_tank],
-        pyg.K_LEFT: [player1_tank],
-        pyg.K_RIGHT: [player1_tank],
-        pyg.K_w: [player2_tank],
-        pyg.K_s: [player2_tank],
-        pyg.K_a: [player2_tank],
-        pyg.K_d: [player2_tank]
-    }
+    # Init event handler and keyboard bindings.
+    keyaction = KeyAction(
+        mode, (player1_tank, player2_tank),
+        game_objects, space)
+    event_handler = EventHandler(mode, keyaction)
 
     while running:
-        # Handle the events
-        for event in pyg.event.get():
-            # Check if we receive a QUIT event (for instance, if the user press the
-            # close button of the wiendow) or if the user press the escape key.
-
-            if event.type == pyg.QUIT or (
-                    event.type == pyg.KEYDOWN and event.key == pyg.K_ESCAPE):
-                running = False
-
-            elif event.type == pyg.KEYDOWN:
-                keyevent.key_down_event(event.key, key_down_event_args)
-
-            elif event.type == pyg.KEYUP:
-                keyevent.key_up_event(event.key, key_up_event_args)
+        event_handler.handle_events(pyg.event)
 
         # Decide what the ai should do.
         for ai_obj in ai_objects:

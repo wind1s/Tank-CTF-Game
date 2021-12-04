@@ -9,9 +9,11 @@ import utility
 
 
 class Ai:
-    """ A simple ai that finds the shortest path to the target using
+    """ 
+    A simple ai that finds the shortest path to the target using
     a breadth first search. Also capable of shooting other tanks and or wooden
-    boxes. """
+    boxes. 
+    """
 
     MIN_ANGLE_DIF = math.radians(2)
     MIN_POS_DIFF = 0.1
@@ -29,7 +31,7 @@ class Ai:
         self.move_cycle = self.move_cycle_gen()
 
         # Buff tanks.
-        self.tank.max_speed = self.tank.max_speed*1.3
+        self.tank.max_speed = self.tank.max_speed*1.4
         self.tank.bullet_max_speed = self.tank.bullet_max_speed*1.7
 
     def decide(self):

@@ -1,6 +1,6 @@
-from ctfgame import *
-import pygame as pyg
 import sounds
+import pygame as pyg
+from ctfgame import *
 
 
 def game_loop(mode):
@@ -20,6 +20,9 @@ def game_loop(mode):
     elif mode == "--multiplayer":
         ai_objects.remove(ai_objects[-1])
         player2_tank = tanks[-1]
+
+    else:
+        assert False, "No game mode was chosen."
 
     # Init event handler and keyboard bindings.
     keyaction = KeyAction(

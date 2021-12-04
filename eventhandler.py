@@ -1,10 +1,10 @@
 import pygame as pyg
-from collections import Hashable
 
 
 class EventHandler():
     def __init__(self, game_mode, keyaction):
 
+        #self.game = game_instance
         self.game_mode = game_mode
 
         self.event_mapping = {
@@ -17,19 +17,20 @@ class EventHandler():
 
     def handle_events(self, pygame_event):
         """ Handles all game events. """
+
         for event in pygame_event.get():
-            # isinstance(event, Hashable) and
-            # Check if key has defined functionality.
             event_type = event.type
+
             if event_type in self.event_mapping:
                 # Callback has supplied arguments.
                 event_callback = self.event_mapping[event_type]
 
                 event_callback(event)
 
-    def event_quit(self, event):
+    def event_quit(self, _):
         """ Quits the game. """
-        return False
+        # self.game.quit_game()
+        return
 
     def event_keydown(self, event):
         """ Hanldes key down events. """

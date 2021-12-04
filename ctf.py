@@ -4,8 +4,6 @@
 from ctfgame import *
 from gameloop import game_loop
 from sys import argv
-from eventhandler import EventHandler
-from keyaction import KeyAction
 
 
 game_mode = None

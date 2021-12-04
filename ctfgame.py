@@ -6,11 +6,11 @@ from eventhandler import EventHandler
 import pygame as pyg
 import pymunk as pym
 import createobjects as cobj
+import gameobjects as gobj
 import collision
 import maps
 import utility
 import sounds
-import gameobjects as gobj
 
 FRAMERATE = 45
 
@@ -34,9 +34,10 @@ bases = cobj.create_bases(current_map)
 game_objects = [*boxes, *bases, flag]
 
 space.add(*cobj.create_map_bounds(current_map, space.static_body))
-space = collision.add_collision_handlers(game_objects, space)
 
 ai_objects = cobj.create_ai(tanks[1:], game_objects, space, current_map)
+collision.CollisionHandler(
+    space, game_objects, game_objects, ai_objects)
 
 
 class CTFGame:
@@ -69,12 +70,10 @@ class CTFGame:
         self.tanks = cobj.create_tanks(self.current_map, self.space)
         self.flag = cobj.create_flag(self.current_map)
         self.bases = cobj.create_bases(self.current_map)
+
         self.physics_objects = [*self.boxes, *self.tanks]
         self.visible_objects = [*self.bases, self.flag]
-
-        # Init collison handlers.
-        self.space = collision.add_collision_handlers(
-            self.physics_objects, self.space)
+        self.game_objects = self.physics_objects + self.visible_objects
 
         # Create ai's.
         self.ai_objects = cobj.create_ai(
@@ -101,11 +100,14 @@ class CTFGame:
              "--multiplayer": set_hot_multiplayer,
              "--co-op:": set_co_op})
 
-        # Init event handler and keyboard bindings.
+        # Init event handler, keyboard bindings and collision handler.
         keyaction = KeyAction(
             game_mode, (self.player1_tank, self.player2_tank),
             self.physics_objects, self.space)
         self.event_handler = EventHandler(game_mode, keyaction)
+
+        collision.CollisionHandler(
+            self.space, self.physics_objects, self.visible_objects, self.ai_objects)
 
     def quit_game(self):
         self.running = False
@@ -139,10 +141,7 @@ class CTFGame:
     def update_objects(self):
         """ Updates the physics of all objects. """
         if self.skip_update == 0:
-            for obj in self.physics_objects:
-                obj.update()
-
-            for obj in self.visible_objects:
+            for obj in self.game_objects:
                 obj.update()
 
             self.skip_update = 2
@@ -151,9 +150,8 @@ class CTFGame:
 
     def post_update_objects(self):
         """ Does post updating of all objects. """
-        objects = self.physics_objects + self.visible_objects
 
-        for index, obj in enumerate(objects):
+        for index, obj in enumerate(self.game_objects):
 
             if isinstance(obj, gobj.Tank):
                 obj.try_grab_flag(flag)
@@ -167,10 +165,7 @@ class CTFGame:
 
     def screen_update_objects(self):
         """ Updates the screen with changes to all objects. """
-        for obj in self.physics_objects:
-            obj.update_screen()
-
-        for obj in self.visible_objects:
+        for obj in self.game_objects:
             obj.update_screen()
 
     def update_ai_decision(self):

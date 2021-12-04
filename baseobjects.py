@@ -65,18 +65,17 @@ class GamePhysicsObject(GameObject):
         half_height = 0.5 * self.sprite.get_height() / TILE_SIZE
 
         # Physical objects have a rectangular shape, the points correspond to the corners of that shape.
-        points = [[-half_width, -half_height],
-                  [-half_width, half_height],
-                  [half_width, half_height],
-                  [half_width, -half_height]]
-        self.points = points
+        self.points = [[-half_width, -half_height],
+                       [-half_width, half_height],
+                       [half_width, half_height],
+                       [half_width, -half_height]]
         # Create a body (which is the physical representation of this game object in the physic engine)
         if(movable):
             # Create a movable object with some mass and moments
             # (considering the game is a top view game, with no gravity,
             # the mass is set to the same value for all objects)."""
             mass = 10
-            moment = pym.moment_for_poly(mass, points)
+            moment = pym.moment_for_poly(mass, self.points)
             self.body = pym.Body(mass, moment)
         else:
             # Create a non movable (static) object
@@ -86,7 +85,7 @@ class GamePhysicsObject(GameObject):
         # orientation is provided in degress, but pymunk expects radians.
         self.body.angle = math.radians(orientation)
         # Create a polygon shape using the corner of the rectangle
-        self.shape = pym.Poly(self.body, points)
+        self.shape = pym.Poly(self.body, self.points)
         self.shape.parent = self
 
         # Set some value for friction and elasticity, which defines interraction in case of a colision

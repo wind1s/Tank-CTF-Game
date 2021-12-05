@@ -1,7 +1,7 @@
-from images import CTFImages
+import math
 import gameobjects as gobj
 import pymunk as pym
-import math
+from images import CTFImages
 
 
 def lookup_call(mapped_name, callback_table, args_table={}):

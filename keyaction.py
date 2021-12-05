@@ -1,6 +1,6 @@
-from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE, CO_OP_MODE)
 import pygame as pyg
 import utility
+from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE, CO_OP_MODE)
 
 
 class KeyAction():

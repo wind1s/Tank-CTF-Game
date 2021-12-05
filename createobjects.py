@@ -1,9 +1,9 @@
 import pygame as pyg
 import pymunk as pym
+import utility
 from gameobjects import (Tank, Base, Flag)
 from images import CTFImages
 from ai import Ai
-import utility
 
 
 def create_grass_background(current_map, screen):

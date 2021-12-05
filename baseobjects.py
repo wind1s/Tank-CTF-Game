@@ -1,9 +1,9 @@
+import math
+import utility
 import pygame as pyg
 import pymunk as pym
 from images import CTFImages
 from config import DEBUG
-import math
-import utility
 
 
 class GameObject:

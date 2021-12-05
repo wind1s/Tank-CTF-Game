@@ -1,17 +1,17 @@
+import math
+import utility
+import pymunk as pym
 from baseobjects import (GamePhysicsObject, GameVisibleObject)
 from sounds import CTFSounds
 from images import CTFImages
-import pymunk as pym
-import math
-import utility
 
 
 class Tank(GamePhysicsObject):
     """ Extends GamePhysicsObject and handles aspects which are specific to our tanks. """
 
     COLLISION_TYPE = 2
-    ACCELERATION = 1
-    NORMAL_MAX_SPEED = 4
+    ACCELERATION = 0.6
+    NORMAL_MAX_SPEED = 2.5
     FLAG_MAX_SPEED = NORMAL_MAX_SPEED * 0.5
     SHOOT_COOLDOWN_MS = 0.5 * 1000.0
     HIT_POINTS = 3

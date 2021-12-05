@@ -1,5 +1,5 @@
-from images import CTFImages
 import pygame as pyg
+from images import CTFImages
 
 
 class CTFMap:

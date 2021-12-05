@@ -1,9 +1,9 @@
-from gameobjects import (Tank, Flag, Box)
-from collections import deque
 import pymunk as pym
 import random as rand
 import math
 import utility
+from collections import deque
+from gameobjects import (Tank, Flag, Box)
 
 
 class Ai:
@@ -29,7 +29,7 @@ class Ai:
         self.move_cycle = self.move_cycle_gen()
 
         # Buff tanks.
-        self.tank.max_speed = self.tank.max_speed*1.2
+        self.tank.max_speed = self.tank.max_speed*1.3
         self.tank.bullet_max_speed = self.tank.bullet_max_speed*1.5
 
     def decide(self):

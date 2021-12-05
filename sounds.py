@@ -1,5 +1,5 @@
-import pygame as pyg
 import os
+import pygame as pyg
 
 
 class CTFSounds():

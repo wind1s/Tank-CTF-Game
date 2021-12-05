@@ -1,26 +1,27 @@
 """
 """
-from keyaction import KeyAction
-from eventhandler import EventHandler
-from sounds import CTFSounds
-from images import CTFImages
-from gameobjects import Tank
-from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE, CO_OP_MODE)
 import pygame as pyg
 import pymunk as pym
 import createobjects as cobj
 import collision
 import utility
+from keyaction import KeyAction
+from eventhandler import EventHandler
+from sounds import CTFSounds
+from images import CTFImages
+from gameobjects import Tank
+from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE,
+                    CO_OP_MODE, FRAMERATE)
 
 
 class CTFGame:
-    FRAMERATE = 45
 
     def __init__(self, game_mode, game_map):
-        # Initialise the display
+        # Init the display
         pyg.init()
         pyg.display.set_mode()
 
+        # Init the game sounds and images.
         CTFSounds()
         CTFImages()
 
@@ -79,16 +80,20 @@ class CTFGame:
         # Init event handler, keyboard bindings and collision handler.
         keyaction = KeyAction(
             game_mode, (self.player1_tank, self.player2_tank),
-            self.game_objects, self.space, self.quit_game)
-        self.event_handler = EventHandler(game_mode, keyaction, self.quit_game)
+            self.game_objects, self.space, self.quit)
+        self.event_handler = EventHandler(game_mode, keyaction, self.quit)
 
         collision.CollisionHandler(
             self.space, self.game_objects, self.ai_objects)
 
-    def quit_game(self):
+    def quit(self):
         self.running = False
 
+    def restart(self):
+        self.__init__(self.game_mode, self.current_map)
+
     def run_loop(self):
+        """ Main game loop. """
         while self.running:
             self.event_handler.handle_events(pyg.event)
 
@@ -99,7 +104,7 @@ class CTFGame:
             self.update_objects()
 
             # Check collisions and update the objects position
-            self.space.step(1 / CTFGame.FRAMERATE)
+            self.space.step(1 / FRAMERATE)
 
             # Update object that depends on an other object position (for instance a flag)
             self.post_update_objects()
@@ -115,7 +120,7 @@ class CTFGame:
             pyg.display.flip()
 
             # Control the game framerate
-            self.clock.tick(CTFGame.FRAMERATE)
+            self.clock.tick(FRAMERATE)
 
     def update_objects(self):
         """ Updates the physics of all objects. """
@@ -138,7 +143,7 @@ class CTFGame:
                 if obj.has_won():
                     CTFSounds.victory.play()
                     print(f"Tank has won!")
-                    self.quit_game()
+                    self.restart()
 
             obj.post_update(self.clock)
 

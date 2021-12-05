@@ -1,52 +1,61 @@
-from pygame import (image, error, get_error, transform)
-from os import path
-
-main_dir = path.split(path.abspath(__file__))[0]
+import pygame as pyg
+import os
 
 
-def load_image(file):
-    """ Load an image from the data directory. """
-    file = path.join(main_dir, 'data', file)
-    try:
-        surface = image.load(file)
-    except error:
-        raise SystemExit('Could not load image "%s" %s' %
-                         (file, get_error()))
-    return surface.convert_alpha()
+class CTFImages():
+    imgs_path = ""
+    TILE_SIZE = 40  # Define the default size of tiles
 
+    explosion = None
+    grass = None
+    rockbox = None
+    metalbox = None
+    woodbox = None
+    flag = None
+    bullet = None
 
-TILE_SIZE = 40  # Define the default size of tiles
+    tank_images = []
+    base_images = []
 
-explosion_img = load_image('explosion.png')  # Image of an explosion
+    def __init__(self, imgs_path=os.path.split(os.path.abspath(__file__))[0]):
+        CTFImages.path = imgs_path
 
-grass_img = load_image('grass.png')  # Image of a grass tile
+        CTFImages.explosion = self.load_image('explosion.png')
+        CTFImages.grass = self.load_image('grass.png')
+        CTFImages.rockbox = self.load_image('rockbox.png')
+        CTFImages.metalbox = self.load_image('metalbox.png')
+        CTFImages.woodbox = self.load_image('woodbox.png')
+        CTFImages.flag = self.load_image('flag.png')  # Image of flag
 
-rockbox_img = load_image('rockbox.png')  # Image of a rock box (wall)
+        CTFImages.bullet = self.load_image('bullet.png')
+        CTFImages.bullet = pyg.transform.scale(
+            CTFImages.bullet, (10, 10))
+        CTFImages.bullet = pyg.transform.rotate(CTFImages.bullet, -90)
 
-metalbox_img = load_image('metalbox.png')  # Image of a metal box
+        # List of image of tanks of different colors
+        CTFImages.tank_images = [
+            self.load_image('tank_orange.png'),
+            self.load_image('tank_blue.png'),
+            self.load_image('tank_white.png'),
+            self.load_image('tank_yellow.png'),
+            self.load_image('tank_red.png'),
+            self.load_image('tank_gray.png')]
 
-woodbox_img = load_image('woodbox.png')  # Image of a wood box
+        # List of image of bases corresponding to the color of each tank
+        CTFImages.base_images = [
+            self.load_image('base_orange.png'),
+            self.load_image('base_blue.png'),
+            self.load_image('base_white.png'),
+            self.load_image('base_yellow.png'),
+            self.load_image('base_red.png'),
+            self.load_image('base_gray.png')]
 
-flag_img = load_image('flag.png')  # Image of flag
-
-bullet_img = load_image('bullet.png')
-bullet_img = transform.scale(bullet_img, (10, 10))
-bullet_img = transform.rotate(bullet_img, -90)
-
-# List of image of tanks of different colors
-tank_images = [
-    load_image('tank_orange.png'),
-    load_image('tank_blue.png'),
-    load_image('tank_white.png'),
-    load_image('tank_yellow.png'),
-    load_image('tank_red.png'),
-    load_image('tank_gray.png')]
-
-# List of image of bases corresponding to the color of each tank
-base_images = [
-    load_image('base_orange.png'),
-    load_image('base_blue.png'),
-    load_image('base_white.png'),
-    load_image('base_yellow.png'),
-    load_image('base_red.png'),
-    load_image('base_gray.png')]
+    def load_image(self, file):
+        """ Load an image from the data directory. """
+        file = os.path.join(self.imgs_path, 'image_files', file)
+        try:
+            surface = pyg.image.load(file)
+        except pyg.error:
+            raise SystemExit('Could not load image "%s" %s' %
+                             (file, pyg.get_error()))
+        return surface.convert_alpha()

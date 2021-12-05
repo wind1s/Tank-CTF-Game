@@ -1,30 +1,30 @@
 from baseobjects import (GamePhysicsObject, GameVisibleObject)
-import images as img
-import math
+from sounds import CTFSounds
+from images import CTFImages
 import pymunk as pym
+import math
 import utility
-import sounds
 
 
 class Tank(GamePhysicsObject):
     """ Extends GamePhysicsObject and handles aspects which are specific to our tanks. """
 
-    # Constant values for the tank, acessed like: Tank.ACCELERATION
-    # You can add more constants here if needed later
     COLLISION_TYPE = 2
     ACCELERATION = 1
     NORMAL_MAX_SPEED = 4
     FLAG_MAX_SPEED = NORMAL_MAX_SPEED * 0.5
     SHOOT_COOLDOWN_MS = 0.5 * 1000.0
+    HIT_POINTS = 3
 
     def __init__(self, x, y, orientation, sprite, space, hit_points):
         super().__init__(x, y, orientation, sprite, space, True)
-        # Define variable used to apply motion to the tanks
+
         self.acceleration = 0  # 1 forward, 0 for stand still, -1 for backwards
         self.rotation = 0  # 1 clockwise, 0 for no rotation, -1 counter clockwise
         self.body.angular_velocity = 0
 
-        self.flag = None                      # This variable is used to access the flag object, if the current tank is carrying the flag
+        # This variable is used to access the flag object, if the current tank is carrying the flag
+        self.flag = None
         self.max_speed = Tank.NORMAL_MAX_SPEED
         self.bullet_max_speed = Bullet.MAX_SPEED
 
@@ -85,6 +85,7 @@ class Tank(GamePhysicsObject):
             self.max_speed, self.body.angular_velocity)
 
     def post_update(self, clock):
+        """ Updates things tha depends on the tanks state. Such as the flags position. """
         # If the tank carries the flag, then update the positon of the flag
         self.update_cooldown(clock)
         if(self.flag != None):
@@ -114,6 +115,7 @@ class Tank(GamePhysicsObject):
                 self.max_speed = Tank.FLAG_MAX_SPEED
 
     def try_drop_flag(self):
+        """ If tank has the flag, drop it."""
         if self.flag != None:
             self.flag.is_on_tank = False
             self.flag = None
@@ -128,7 +130,7 @@ class Tank(GamePhysicsObject):
         if self.shoot_cooldown > 0:
             return
 
-        sounds.shooting.play()
+        CTFSounds.shooting.play()
 
         self.shoot_cooldown = self.SHOOT_COOLDOWN_MS
         offset_vector = pym.Vec2d(0, 0.5).rotated(self.body.angle)
@@ -139,7 +141,7 @@ class Tank(GamePhysicsObject):
         physics_objects.append(
             Bullet(
                 self, bullet_x, bullet_y, orientation,
-                self.bullet_max_speed, img.bullet_img, space))
+                self.bullet_max_speed, CTFImages.bullet, space))
 
     def respawn(self):
         self.hit_points = self.max_hit_points
@@ -226,7 +228,7 @@ class Flag(GameVisibleObject):
 
     def __init__(self, x, y):
         self.is_on_tank = False
-        super().__init__(x, y, img.flag_img)
+        super().__init__(x, y, CTFImages.flag)
 
 
 class Base(GameVisibleObject):

@@ -4,16 +4,16 @@ import pygame as pyg
 
 class KeyAction():
     def __init__(
-            self, game_mode, player_tanks, physics_objects, space):
+            self, game_mode, player_tanks, game_objects, space, quit_callback):
 
         self.player1_tank = player_tanks[0]
         self.player2_tank = player_tanks[1]
-        self.physics_objects = physics_objects
+        self.game_objects = game_objects
         self.space = space
 
         # Functions mapped to key presses.
         self.keydown_mapping = {
-            # pyg.K_ESCAPE: game.quit_game,
+            pyg.K_ESCAPE: quit_callback,
             pyg.K_UP: self.keydown_k_up,
             pyg.K_DOWN: self.keydown_k_down,
             pyg.K_LEFT: self.keydown_k_left,
@@ -39,18 +39,20 @@ class KeyAction():
 
         player_keys = {
             "player1":
-            (pyg.K_UP, pyg.K_DOWN, pyg.K_LEFT, pyg.K_RIGHT, pyg.K_SPACE),
+            {pyg.K_UP, pyg.K_DOWN, pyg.K_LEFT, pyg.K_RIGHT, pyg.K_SPACE},
             "player2":
-            (pyg.K_w, pyg.K_s, pyg.K_a, pyg.K_d, pyg.K_x)
+            {pyg.K_w, pyg.K_s, pyg.K_a, pyg.K_d, pyg.K_x}
         }
 
-        self.accepted_keys = tuple()
+        self.accepted_keys = set()
+        self.accepted_keys.update(self.keyup_mapping.keys())
+        self.accepted_keys.update(set(self.keydown_mapping.keys()))
 
         def set_singleplayer_keybinds():
-            self.accepted_keys = player_keys["player1"]
+            self.accepted_keys.difference_update(player_keys["player2"])
 
         def set_hot_multiplayer_keybinds():
-            self.accepted_keys = player_keys["player1"] + player_keys["player2"]
+            return
 
         def set_co_op_keybinds():
             set_hot_multiplayer_keybinds()
@@ -78,11 +80,11 @@ class KeyAction():
 
     def keydown_k_space(self):
         """ Performs key down space keybinding functionality. """
-        self.player1_tank.shoot(self.space, self.physics_objects)
+        self.player1_tank.shoot(self.space, self.game_objects)
 
     def keydown_k_x(self):
         """ Performs key down x keybinding functionality. """
-        self.player2_tank.shoot(self.space, self.physics_objects)
+        self.player2_tank.shoot(self.space, self.game_objects)
 
     def keydown_k_up(self):
         """ Performs key down up arrow keybinding functionality. """

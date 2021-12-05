@@ -1,6 +1,6 @@
 import pygame as pyg
 import pymunk as pym
-from images import TILE_SIZE
+from images import CTFImages
 import math
 import utility
 
@@ -61,8 +61,8 @@ class GamePhysicsObject(GameObject):
         super().__init__(sprite)
 
         # Half dimensions of the object converted from screen coordinates to physic coordinates
-        half_width = 0.5 * self.sprite.get_width() / TILE_SIZE
-        half_height = 0.5 * self.sprite.get_height() / TILE_SIZE
+        half_width = 0.5 * self.sprite.get_width() / CTFImages.TILE_SIZE
+        half_height = 0.5 * self.sprite.get_height() / CTFImages.TILE_SIZE
 
         # Physical objects have a rectangular shape, the points correspond to the corners of that shape.
         self.points = [[-half_width, -half_height],

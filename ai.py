@@ -1,11 +1,9 @@
-import math
+from gameobjects import (Tank, Flag, Box)
+from collections import deque
 import pymunk as pym
-import gameobjects as gobj
-import collections as coll
 import random as rand
+import math
 import utility
-
-# NOTE: use only 'map0' during development!
 
 
 class Ai:
@@ -18,21 +16,21 @@ class Ai:
     MIN_ANGLE_DIF = math.radians(2)
     MIN_POS_DIFF = 0.1
 
-    def __init__(self, tank, game_objects_list, space, currentmap):
+    def __init__(self, tank, game_objects, space, current_map):
         self.tank = tank
-        self.game_objects_list = game_objects_list
+        self.game_objects = game_objects
         self.space = space
-        self.currentmap = currentmap
+        self.current_map = current_map
         self.flag = None
-        self.MAX_X = currentmap.width - 1
-        self.MAX_Y = currentmap.height - 1
+        self.MAX_X = current_map.width - 1
+        self.MAX_Y = current_map.height - 1
 
-        self.path = coll.deque()
+        self.path = deque()
         self.move_cycle = self.move_cycle_gen()
 
         # Buff tanks.
-        self.tank.max_speed = self.tank.max_speed*1.4
-        self.tank.bullet_max_speed = self.tank.bullet_max_speed*1.7
+        self.tank.max_speed = self.tank.max_speed*1.2
+        self.tank.bullet_max_speed = self.tank.bullet_max_speed*1.5
 
     def decide(self):
         """ Main decision function that gets called on every tick of the game. """
@@ -61,10 +59,10 @@ class Ai:
 
             parent = type_hit.shape.parent
 
-            if isinstance(parent, gobj.Tank) or (
-                    isinstance(parent, gobj.Box) and parent.box_type
-                    in (gobj.Box.WOODBOX_TYPE, gobj.Box.METALBOX_TYPE)):
-                self.tank.shoot(self.space, self.game_objects_list)
+            if isinstance(parent, Tank) or (
+                    isinstance(parent, Box) and parent.box_type
+                    in (Box.WOODBOX_TYPE, Box.METALBOX_TYPE)):
+                self.tank.shoot(self.space, self.game_objects)
 
     def turn(self, next_coord):
         """"""
@@ -81,7 +79,7 @@ class Ai:
             self.tank.turn_right()
 
     def correct_angle(self, next_coord):
-        def generate_angle_diff():
+        def angle_diff():
             """ Adds a random value to position diff to make ai more human. """
             return Ai.MIN_ANGLE_DIF + math.radians(rand.random())
 
@@ -92,14 +90,14 @@ class Ai:
             self.tank.get_angle(), target_angle)
 
         # Add random value to make ai's movement different.
-        return abs(current_diff) <= generate_angle_diff()
+        return abs(current_diff) <= angle_diff()
 
     def correct_pos(self, next_coord):
-        def generate_pos_diff():
+        def pos_diff():
             """ Adds a random value to position diff to make ai more human. """
             return Ai.MIN_POS_DIFF + rand.random()/10
 
-        return self.tank.get_pos().get_distance(next_coord) <= generate_pos_diff()
+        return self.tank.get_pos().get_distance(next_coord) <= pos_diff()
 
     def move_cycle_gen(self):
         """ A generator that iteratively goes through all the required steps
@@ -137,7 +135,7 @@ class Ai:
             self.tank.stop_moving()
 
     def shorten_path(self, path):
-        new_path = coll.deque()
+        new_path = deque()
 
         def path_tile_is_turn(i):
             return path[i-1].x != path[i+1].x and path[i-1].y != path[i+1].y
@@ -150,12 +148,13 @@ class Ai:
         return new_path
 
     def find_shortest_path(self, origin, target):
-        """ A simple Breadth First Search using integer coordinates as our nodes.
-            Edges are calculated as we go, using an external function.
+        """ 
+        A simple Breadth First Search using integer coordinates as our nodes.
+        Edges are calculated as we go, using an external function.
         """
         origin = utility.get_tile_position(origin)
         paths = {origin.int_tuple: [origin]}
-        queue = coll.deque([origin])
+        queue = deque([origin])
         visited = set()
 
         while queue:
@@ -164,7 +163,7 @@ class Ai:
             if node == target:
                 shortest_path = paths[node.int_tuple].copy()
                 shortest_path.append(node)
-                return coll.deque(shortest_path)
+                return deque(shortest_path)
 
             for neighbor in self.get_tile_neighbors(node):
                 if neighbor.int_tuple not in visited:
@@ -175,7 +174,7 @@ class Ai:
 
             del paths[node.int_tuple]
 
-        return coll.deque([])
+        return deque([])
 
     def get_target_tile(self):
         """ Returns position of the flag if we don't have it. If we do have the flag,
@@ -194,8 +193,8 @@ class Ai:
         """
         if self.flag is None:
             # Find the flag in the game objects list
-            for obj in self.game_objects_list:
-                if isinstance(obj, gobj.Flag):
+            for obj in self.game_objects:
+                if isinstance(obj, Flag):
                     self.flag = obj
                     break
         return self.flag
@@ -222,12 +221,9 @@ class Ai:
         if not (x_in_bounds and y_in_bounds):
             return False
 
-        box_type = self.currentmap.boxAt(coord.x, coord.y)
-        box_is_wood = box_type == gobj.Box.WOODBOX_TYPE
-        box_is_grass = box_type == gobj.Box.GRASS_TYPE
-        box_is_metal = box_type == gobj.Box.METALBOX_TYPE
+        box_type = self.current_map.box_at(coord.x, coord.y)
+        box_is_wood = box_type == Box.WOODBOX_TYPE
+        box_is_grass = box_type == Box.GRASS_TYPE
+        box_is_metal = box_type == Box.METALBOX_TYPE
 
         return box_is_grass or box_is_wood or box_is_metal
-
-
-SimpleAi = Ai  # Legacy

@@ -2,9 +2,9 @@ import pygame as pyg
 
 
 class EventHandler():
-    def __init__(self, game_mode, keyaction):
+    def __init__(self, game_mode, keyaction, quit_callback):
 
-        #self.game = game_instance
+        self.quit_game = quit_callback
         self.game_mode = game_mode
 
         self.event_mapping = {
@@ -29,7 +29,7 @@ class EventHandler():
 
     def event_quit(self, _):
         """ Quits the game. """
-        # self.game.quit_game()
+        self.quit_game()
         return
 
     def event_keydown(self, event):

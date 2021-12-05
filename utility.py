@@ -1,7 +1,7 @@
-import math
+from images import CTFImages
 import gameobjects as gobj
 import pymunk as pym
-import images as img
+import math
 
 
 def lookup_call(mapped_name, callback_table, args_table={}):
@@ -34,7 +34,7 @@ def periodic_difference_of_angles(angle1, angle2):
 
 def physics_to_display(x):
     """ This function is used to convert coordinates in the physic engine into the display coordinates """
-    return x * img.TILE_SIZE
+    return x * CTFImages.TILE_SIZE
 
 
 def get_tile_position(position_vector):
@@ -48,12 +48,12 @@ def get_box_with_type(x, y, box_type, space):
 
     if box_type == gobj.Box.ROCKBOX_TYPE:  # Creates a non-movable non-destructable rockbox
         return gobj.Box(
-            x, y, img.rockbox_img, False, space, False, gobj.Box.ROCKBOX_TYPE)
+            x, y, CTFImages.rockbox, False, space, False, gobj.Box.ROCKBOX_TYPE)
 
     if box_type == gobj.Box.WOODBOX_TYPE:  # Creates a movable destructable woodbox
         return gobj.Box(
-            x, y, img.woodbox_img, True, space, True, gobj.Box.WOODBOX_TYPE)
+            x, y, CTFImages.woodbox, True, space, True, gobj.Box.WOODBOX_TYPE)
 
     if box_type == gobj.Box.METALBOX_TYPE:  # Creates a movable non-destructable metalbox
         return gobj.Box(
-            x, y, img.metalbox_img, True, space, False, gobj.Box.METALBOX_TYPE)
+            x, y, CTFImages.metalbox, True, space, False, gobj.Box.METALBOX_TYPE)

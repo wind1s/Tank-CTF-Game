@@ -1,7 +1,6 @@
 import pygame as pyg
 import pymunk as pym
-import utility
-from gameobjects import (Tank, Base, Flag)
+from gameobjects import (Tank, Base, Flag, Box)
 from images import CTFImages
 from ai import Ai
 
@@ -24,7 +23,7 @@ def create_grass_background(current_map, screen):
 def create_boxes(current_map, space):
     """ Creates boxes at map coord with corresponding box type. """
     get_type = current_map.box_at
-    get_box = utility.get_box_with_type
+    get_box = Box.get_box_with_type
 
     width = current_map.width
     height = current_map.height
@@ -64,14 +63,12 @@ def create_map_bounds(current_map, body):
     map_width = current_map.width
     map_height = current_map.height
 
-    bounds = (
+    return (
         pym.Segment(body, (0, 0), (0, map_height), 0.0),
         pym.Segment(body, (0, map_height), (map_width, map_height), 0.0),
         pym.Segment(body, (map_width, map_height), (map_width, 0), 0.0),
         pym.Segment(body, (map_width, 0), (0, 0), 0.0)
     )
-
-    return bounds
 
 
 def create_ai(tanks, game_objects, space, current_map):

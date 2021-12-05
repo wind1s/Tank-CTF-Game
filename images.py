@@ -1,9 +1,9 @@
 import os
 import pygame as pyg
+from config import IMAGES_PATH
 
 
 class CTFImages():
-    imgs_path = ""
     TILE_SIZE = 40  # Define the default size of tiles
 
     explosion = None
@@ -17,9 +17,7 @@ class CTFImages():
     tank_images = []
     base_images = []
 
-    def __init__(self, imgs_path=os.path.split(os.path.abspath(__file__))[0]):
-        CTFImages.path = imgs_path
-
+    def __init__(self):
         CTFImages.explosion = self.load_image('explosion.png')
         CTFImages.grass = self.load_image('grass.png')
         CTFImages.rockbox = self.load_image('rockbox.png')
@@ -50,12 +48,13 @@ class CTFImages():
             self.load_image('base_red.png'),
             self.load_image('base_gray.png')]
 
-    def load_image(self, file):
-        """ Load an image from the data directory. """
-        file = os.path.join(self.imgs_path, 'image_files', file)
+    @staticmethod
+    def load_image(file):
+        """ Load an image. """
+        file = os.path.join(IMAGES_PATH, file)
         try:
             surface = pyg.image.load(file)
         except pyg.error:
-            raise SystemExit('Could not load image "%s" %s' %
-                             (file, pyg.get_error()))
+            raise SystemExit(
+                f"Could not load image \"{file}\" {pyg.get_error()}")
         return surface.convert_alpha()

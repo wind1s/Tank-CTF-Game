@@ -1,6 +1,6 @@
 import math
-import utility
 import pymunk as pym
+from utility import (seconds_to_ms, clamp)
 from baseobjects import (GamePhysicsObject, GameVisibleObject)
 from sounds import CTFSounds
 from images import CTFImages
@@ -13,8 +13,9 @@ class Tank(GamePhysicsObject):
     ACCELERATION = 0.6
     NORMAL_MAX_SPEED = 2.5
     FLAG_MAX_SPEED = NORMAL_MAX_SPEED * 0.5
-    SHOOT_COOLDOWN_MS = 0.5 * 1000.0
     HIT_POINTS = 3
+    SHOOT_COOLDOWN_MS = seconds_to_ms(0.5)
+    SPAWN_PROTECTION_MS = seconds_to_ms(3)
 
     def __init__(self, x, y, orientation, sprite, space, hit_points):
         super().__init__(x, y, orientation, sprite, space, True)
@@ -34,6 +35,7 @@ class Tank(GamePhysicsObject):
 
         self.shape.collision_type = Tank.COLLISION_TYPE
         self.shoot_cooldown = 0
+        self.protection_time = seconds_to_ms(1.5)  # Time in ms
 
         self.max_hit_points = hit_points
         self.hit_points = hit_points
@@ -69,46 +71,48 @@ class Tank(GamePhysicsObject):
 
         # Creates a vector in the direction we want accelerate / decelerate
         acceleration_vector = pym.Vec2d(
-            0, self.ACCELERATION * self.acceleration).rotated(self.body.angle)
+            0, self.ACCELERATION * self.acceleration).rotated(self.get_angle())
         # Applies the vector to our velocity
         self.body.velocity += acceleration_vector
 
         # Makes sure that we dont exceed our speed limit
-        velocity = utility.clamp(self.max_speed, self.body.velocity.length)
+        velocity = clamp(self.max_speed, self.body.velocity.length)
         self.body.velocity = pym.Vec2d(
             velocity, 0).rotated(
             self.body.velocity.angle)
 
         # Updates the rotation
         self.body.angular_velocity += self.rotation * self.ACCELERATION
-        self.body.angular_velocity = utility.clamp(
+        self.body.angular_velocity = clamp(
             self.max_speed, self.body.angular_velocity)
 
     def post_update(self, clock):
         """ Updates things tha depends on the tanks state. Such as the flags position. """
         # If the tank carries the flag, then update the positon of the flag
-        self.update_cooldown(clock)
+        self.update_timers(clock)
+
         if(self.flag != None):
-            self.flag.x = self.body.position[0]
-            self.flag.y = self.body.position[1]
-            self.flag.orientation = -math.degrees(self.body.angle)
+            self.flag.x, self.flag.y = self.get_pos()
+            self.flag.orientation = -math.degrees(self.get_angle())
         # Else ensure that the tank has its normal max speed
         else:
             self.max_speed = Tank.NORMAL_MAX_SPEED
 
-    def update_cooldown(self, clock):
+    def update_timers(self, clock):
         # Reduce timers by time this tick took.
-        self.shoot_cooldown -= clock.get_time() if self.shoot_cooldown >= 0 else 0
+        time_passed = clock.get_time()
+        self.shoot_cooldown -= time_passed if self.shoot_cooldown >= 0 else 0
+        self.protection_time -= time_passed if self.protection_time >= 0 else 0
 
     def try_grab_flag(self, flag):
         """ Call this function to try to grab the flag, if the flag is not on other tank
             and it is close to the current tank, then the current tank will grab the flag.
         """
         # Check that the flag is not on other tank
-        if(not flag.is_on_tank):
+        if not flag.is_on_tank:
             # Check if the tank is close to the flag
             flag_pos = pym.Vec2d(flag.x, flag.y)
-            if((flag_pos - self.body.position).length < 0.5):
+            if (flag_pos - self.get_pos()).length < 0.5:
                 # Grab the flag !
                 self.flag = flag
                 flag.is_on_tank = True
@@ -116,16 +120,16 @@ class Tank(GamePhysicsObject):
 
     def try_drop_flag(self):
         """ If tank has the flag, drop it."""
-        if self.flag != None:
+        if self.flag is not None:
             self.flag.is_on_tank = False
             self.flag = None
 
     def has_won(self):
         """ Check if the current tank has won (if it is has the flag and it is close to its start position). """
-        return self.flag != None and (
+        return self.flag is not None and (
             self.start_position - self.body.position).length < 0.2
 
-    def shoot(self, space, physics_objects):
+    def shoot(self, space, game_objects):
         """ Call this function to shoot a missile """
         if self.shoot_cooldown > 0:
             return
@@ -133,18 +137,34 @@ class Tank(GamePhysicsObject):
         CTFSounds.shooting.play()
 
         self.shoot_cooldown = self.SHOOT_COOLDOWN_MS
-        offset_vector = pym.Vec2d(0, 0.5).rotated(self.body.angle)
+        tank_angle = self.get_angle()
+
+        offset_vector = pym.Vec2d(0, 0.5).rotated(tank_angle)
         bullet_x = self.body.position[0] + offset_vector.x
         bullet_y = self.body.position[1] + offset_vector.y
-        orientation = self.body.angle
+        orientation = tank_angle
 
-        physics_objects.append(
+        game_objects.append(
             Bullet(
                 self, bullet_x, bullet_y, orientation,
                 self.bullet_max_speed, CTFImages.bullet, space))
 
+    def get_shot(self):
+        """ Reduces hitpoints if the tank has no protection. """
+        # Spawn protection timer.
+        if self.protection_time > 0:
+            return
+
+        self.hit_points -= 1
+
     def respawn(self):
+        """ Respawns the tank if it's hitpoints are 0. Returns if tank respawned. """
+        if self.hit_points > 0:
+            return False
+
         self.hit_points = self.max_hit_points
+        self.shoot_cooldown = 0
+        self.protection_time = self.SPAWN_PROTECTION_MS
 
         self.try_drop_flag()
 
@@ -156,6 +176,8 @@ class Tank(GamePhysicsObject):
 
         self.set_pos(start_x, start_y)
         self.set_angle(start_angle)
+
+        return True
 
     def set_pos(self, x, y):
         self.body.position = pym.Vec2d(x, y)
@@ -221,6 +243,24 @@ class Box(GamePhysicsObject):
         self.box_type = box_type
         self.hit_points = Box.MAX_HIT_POINTS
         self.shape.collision_type = Box.COLLISION_TYPE
+
+    @staticmethod
+    def get_box_with_type(x, y, box_type, space):
+        """ Creates a box instance with specified type. """
+        # Offsets the coordinate to the center of the tile
+        (x, y) = (x + 0.5, y + 0.5)
+
+        if box_type == Box.ROCKBOX_TYPE:  # Creates a non-movable non-destructable rockbox
+            return Box(
+                x, y, CTFImages.rockbox, False, space, False, Box.ROCKBOX_TYPE)
+
+        elif box_type == Box.WOODBOX_TYPE:  # Creates a movable destructable woodbox
+            return Box(
+                x, y, CTFImages.woodbox, True, space, True, Box.WOODBOX_TYPE)
+
+        elif box_type == Box.METALBOX_TYPE:  # Creates a movable non-destructable metalbox
+            return Box(
+                x, y, CTFImages.metalbox, True, space, False, Box.METALBOX_TYPE)
 
 
 class Flag(GameVisibleObject):

@@ -1,7 +1,11 @@
 import math
-import gameobjects as gobj
 import pymunk as pym
 from images import CTFImages
+
+
+def seconds_to_ms(seconds: float):
+    """ Convertes seconds to milliseconds. """
+    return seconds * 1000.0
 
 
 def lookup_call(mapped_name, callback_table, args_table={}):
@@ -41,19 +45,3 @@ def get_tile_position(position_vector):
     """ Converts and returns the float position of our tank to an integer position. """
     x, y = position_vector
     return pym.Vec2d(int(x), int(y))
-
-
-def get_box_with_type(x, y, box_type, space):
-    (x, y) = (x + 0.5, y + 0.5)  # Offsets the coordinate to the center of the tile
-
-    if box_type == gobj.Box.ROCKBOX_TYPE:  # Creates a non-movable non-destructable rockbox
-        return gobj.Box(
-            x, y, CTFImages.rockbox, False, space, False, gobj.Box.ROCKBOX_TYPE)
-
-    if box_type == gobj.Box.WOODBOX_TYPE:  # Creates a movable destructable woodbox
-        return gobj.Box(
-            x, y, CTFImages.woodbox, True, space, True, gobj.Box.WOODBOX_TYPE)
-
-    if box_type == gobj.Box.METALBOX_TYPE:  # Creates a movable non-destructable metalbox
-        return gobj.Box(
-            x, y, CTFImages.metalbox, True, space, False, gobj.Box.METALBOX_TYPE)

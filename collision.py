@@ -57,11 +57,9 @@ class CollisionHandler():
     def collision_tank_bullet(self, tank_shape):
         """ Handles tank collision with bullets."""
         tank = tank_shape.parent
-        tank.hit_points -= 1
+        tank.get_shot()
 
-        if tank.hit_points <= 0:
-            tank.respawn()
-
+        if tank.respawn():
             for ai in self.ai_objects:
                 if ai.tank is tank:
                     ai.move_cycle = ai.move_cycle_gen()

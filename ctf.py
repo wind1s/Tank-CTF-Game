@@ -2,18 +2,26 @@
 """
 """
 import maps
+import pygame as pyg
+from sounds import CTFSounds
+from images import CTFImages
 from ctfgame import CTFGame
 from sys import argv
 from config import SINGLEPLAYER_MODE
+from cmdparser import parse_cmd_args
 
 
-game_mode = None
+# Init the display
+pyg.init()
+pyg.display.set_mode()
 
-if len(argv) > 1:
-    game_mode = argv[1]
-else:
-    game_mode = SINGLEPLAYER_MODE
+# Init the game sounds and images.
+CTFImages()
+CTFSounds()
+CTFSounds.background.play()
+
+arguments = parse_cmd_args()
 
 game_map = maps.map0
-game = CTFGame(game_mode, game_map)
+game = CTFGame(arguments.game_mode, game_map)
 game.run_loop()

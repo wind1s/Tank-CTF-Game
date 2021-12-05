@@ -1,20 +1,16 @@
 import os
 import pygame as pyg
+from config import SOUNDS_PATH
 
 
 class CTFSounds():
-    path = ""
-
     victory = None
     shooting = None
     wood_breaking = None
     explosion = None
     background = None
 
-    def __init__(
-            self, sounds_path=os.path.split(os.path.abspath(__file__))[0]):
-        CTFSounds.path = sounds_path
-
+    def __init__(self):
         pyg.mixer.init()
 
         CTFSounds.victory = self.load_sound("wood_breaking.wav")
@@ -23,12 +19,13 @@ class CTFSounds():
         CTFSounds.explosion = self.load_sound("wood_breaking.wav")
         CTFSounds.background = self.load_sound("wood_breaking.wav")
 
-    def load_sound(self, file):
-        """ Load an image from the data directory. """
-        file = os.path.join(CTFSounds.path, 'sound_files', file)
+    @staticmethod
+    def load_sound(file):
+        """ Load a sound file. """
+        file = os.path.join(SOUNDS_PATH, file)
         try:
             sound = pyg.mixer.Sound(file)
         except pyg.error:
-            raise SystemExit('Could not load image "%s" %s' %
-                             (file, pyg.get_error()))
+            raise SystemExit(
+                f"Could not load image \"{file}\" {pyg.get_error()}")
         return sound

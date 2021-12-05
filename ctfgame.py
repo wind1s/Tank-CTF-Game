@@ -4,27 +4,19 @@ import pygame as pyg
 import pymunk as pym
 import createobjects as cobj
 import collision
-import utility
+from utility import lookup_call
 from keyaction import KeyAction
 from eventhandler import EventHandler
 from sounds import CTFSounds
-from images import CTFImages
 from gameobjects import Tank
 from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE,
                     CO_OP_MODE, FRAMERATE)
 
 
 class CTFGame:
+    """ Main game class. Handles all major functionality. """
 
     def __init__(self, game_mode, game_map):
-        # Init the display
-        pyg.init()
-        pyg.display.set_mode()
-
-        # Init the game sounds and images.
-        CTFSounds()
-        CTFImages()
-
         self.running = True
         self.game_mode = game_mode
         self.current_map = game_map
@@ -71,7 +63,7 @@ class CTFGame:
         def set_co_op():
             assert False, "co-op not implemented!"
 
-        utility.lookup_call(
+        lookup_call(
             self.game_mode,
             {SINGLEPLAYER_MODE: set_singleplayer,
              HOT_MULTIPLAYER_MODE: set_hot_multiplayer,

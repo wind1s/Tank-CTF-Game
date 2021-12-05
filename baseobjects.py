@@ -1,14 +1,10 @@
 import pygame as pyg
 import pymunk as pym
-import images as img
+from images import CTFImages
 import math
+import utility
 
 DEBUG = False  # Change this to set it in debug mode
-
-
-def physics_to_display(x):
-    """ This function is used to convert coordinates in the physic engine into the display coordinates """
-    return x * img.TILE_SIZE
 
 
 class GameObject:
@@ -65,22 +61,21 @@ class GamePhysicsObject(GameObject):
         super().__init__(sprite)
 
         # Half dimensions of the object converted from screen coordinates to physic coordinates
-        half_width = 0.5 * self.sprite.get_width() / img.TILE_SIZE
-        half_height = 0.5 * self.sprite.get_height() / img.TILE_SIZE
+        half_width = 0.5 * self.sprite.get_width() / CTFImages.TILE_SIZE
+        half_height = 0.5 * self.sprite.get_height() / CTFImages.TILE_SIZE
 
         # Physical objects have a rectangular shape, the points correspond to the corners of that shape.
-        points = [[-half_width, -half_height],
-                  [-half_width, half_height],
-                  [half_width, half_height],
-                  [half_width, -half_height]]
-        self.points = points
+        self.points = [[-half_width, -half_height],
+                       [-half_width, half_height],
+                       [half_width, half_height],
+                       [half_width, -half_height]]
         # Create a body (which is the physical representation of this game object in the physic engine)
         if(movable):
             # Create a movable object with some mass and moments
             # (considering the game is a top view game, with no gravity,
             # the mass is set to the same value for all objects)."""
             mass = 10
-            moment = pym.moment_for_poly(mass, points)
+            moment = pym.moment_for_poly(mass, self.points)
             self.body = pym.Body(mass, moment)
         else:
             # Create a non movable (static) object
@@ -90,7 +85,7 @@ class GamePhysicsObject(GameObject):
         # orientation is provided in degress, but pymunk expects radians.
         self.body.angle = math.radians(orientation)
         # Create a polygon shape using the corner of the rectangle
-        self.shape = pym.Poly(self.body, points)
+        self.shape = pym.Poly(self.body, self.points)
         self.shape.parent = self
 
         # Set some value for friction and elasticity, which defines interraction in case of a colision
@@ -105,7 +100,7 @@ class GamePhysicsObject(GameObject):
 
     def screen_position(self):
         """ Converts the body's position in the physics engine to screen coordinates. """
-        return physics_to_display(self.body.position)
+        return utility.physics_to_display(self.body.position)
 
     def screen_orientation(self):
         """ Angles are reversed from the engine to the display. """
@@ -117,7 +112,7 @@ class GamePhysicsObject(GameObject):
         if DEBUG:
             ps = [self.body.position+p for p in self.points]
 
-            ps = [physics_to_display(p) for p in ps]
+            ps = [utility.physics_to_display(p) for p in ps]
             ps += [ps[0]]
             pyg.draw.lines(
                 screen, pyg.color.THECOLORS["red"],
@@ -135,7 +130,7 @@ class GameVisibleObject(GameObject):
         super().__init__(sprite)
 
     def screen_position(self):
-        return physics_to_display(pym.Vec2d(self.x, self.y))
+        return utility.physics_to_display(pym.Vec2d(self.x, self.y))
 
     def screen_orientation(self):
         return self.orientation

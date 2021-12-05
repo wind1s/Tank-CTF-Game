@@ -5,6 +5,7 @@ from eventhandler import EventHandler
 from sounds import CTFSounds
 from images import CTFImages
 from gameobjects import Tank
+from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE, CO_OP_MODE)
 import pygame as pyg
 import pymunk as pym
 import createobjects as cobj
@@ -71,9 +72,9 @@ class CTFGame:
 
         utility.lookup_call(
             self.game_mode,
-            {"--singleplayer": set_singleplayer,
-             "--multiplayer": set_hot_multiplayer,
-             "--co-op:": set_co_op})
+            {SINGLEPLAYER_MODE: set_singleplayer,
+             HOT_MULTIPLAYER_MODE: set_hot_multiplayer,
+             CO_OP_MODE: set_co_op})
 
         # Init event handler, keyboard bindings and collision handler.
         keyaction = KeyAction(

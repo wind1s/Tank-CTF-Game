@@ -3,6 +3,7 @@
 """
 from ctfgame import CTFGame
 from sys import argv
+from config import SINGLEPLAYER_MODE
 import maps
 
 
@@ -11,7 +12,7 @@ game_mode = None
 if len(argv) > 1:
     game_mode = argv[1]
 else:
-    game_mode = "--singleplayer"
+    game_mode = SINGLEPLAYER_MODE
 
 game_map = maps.map0
 

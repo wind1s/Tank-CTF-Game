@@ -3,7 +3,7 @@
 ## Starting game
 
 Start the game by running ```python3 ctf.py```. 
-Add flag ```--singleplayer``` for singleplayer mode or ```--multiplayer``` for 2-person multiplayer.
+Add flag ```--singleplayer``` for singleplayer mode or ```--hot-multiplayer``` for 2-person multiplayer.
 By default the game starts in singleplayer mode.
 
 ## Features

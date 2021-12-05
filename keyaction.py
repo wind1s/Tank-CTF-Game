@@ -1,5 +1,6 @@
-import utility
+from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE, CO_OP_MODE)
 import pygame as pyg
+import utility
 
 
 class KeyAction():
@@ -59,9 +60,9 @@ class KeyAction():
             assert False, "co-op not implemented!"
 
         utility.lookup_call(game_mode, {
-            "--singleplayer": set_singleplayer_keybinds,
-            "--multiplayer": set_hot_multiplayer_keybinds,
-            "--co-op": set_co_op_keybinds
+            SINGLEPLAYER_MODE: set_singleplayer_keybinds,
+            HOT_MULTIPLAYER_MODE: set_hot_multiplayer_keybinds,
+            CO_OP_MODE: set_co_op_keybinds
         })
 
     def keydown_action(self, event):

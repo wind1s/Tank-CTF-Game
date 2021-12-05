@@ -1,10 +1,9 @@
 import pygame as pyg
 import pymunk as pym
 from images import CTFImages
+from config import DEBUG
 import math
 import utility
-
-DEBUG = False  # Change this to set it in debug mode
 
 
 class GameObject:

@@ -73,7 +73,7 @@ class Ai:
         current_diff = utility.periodic_difference_of_angles(
             self.tank.get_angle(), target_angle)
 
-        if current_diff > 0:
+        if 0 <= current_diff <= math.pi:
             self.tank.turn_left()
         else:
             self.tank.turn_right()

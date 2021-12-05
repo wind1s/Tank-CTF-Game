@@ -6,9 +6,7 @@ import pygame as pyg
 from sounds import CTFSounds
 from images import CTFImages
 from ctfgame import CTFGame
-from sys import argv
-from config import SINGLEPLAYER_MODE
-from cmdparser import parse_cmd_args
+from cmdparser import parse_game_cmd_args
 
 
 # Init the display
@@ -20,8 +18,7 @@ CTFImages()
 CTFSounds()
 CTFSounds.background.play()
 
-arguments = parse_cmd_args()
+arguments = parse_game_cmd_args()
 
-game_map = maps.map0
-game = CTFGame(arguments.game_mode, game_map)
+game = CTFGame(arguments.game_mode, maps.CTFMap.load_map(arguments.map))
 game.run_loop()

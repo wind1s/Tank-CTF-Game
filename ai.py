@@ -13,7 +13,7 @@ class Ai:
     boxes. 
     """
 
-    MIN_ANGLE_DIF = math.radians(2)
+    MIN_ANGLE_DIF = math.radians(1.5)
     MIN_POS_DIFF = 0.1
 
     def __init__(self, tank, game_objects, space, current_map):
@@ -65,7 +65,7 @@ class Ai:
                 self.tank.shoot(self.space, self.game_objects)
 
     def turn(self, next_coord):
-        """"""
+        """ Turns the tank toward a coordinate. """
 
         target_angle = utility.angle_between_vectors(
             self.tank.get_pos(), next_coord)
@@ -79,6 +79,7 @@ class Ai:
             self.tank.turn_right()
 
     def correct_angle(self, next_coord):
+        """ Checks if tank is standing close to the same angle as the coord. """
         def angle_diff():
             """ Adds a random value to position diff to make ai more human. """
             return Ai.MIN_ANGLE_DIF + math.radians(rand.random())
@@ -93,6 +94,7 @@ class Ai:
         return abs(current_diff) <= angle_diff()
 
     def correct_pos(self, next_coord):
+        """ Checks if the tank is standing close enought to the coord. """
         def pos_diff():
             """ Adds a random value to position diff to make ai more human. """
             return Ai.MIN_POS_DIFF + rand.random()/10
@@ -135,6 +137,7 @@ class Ai:
             self.tank.stop_moving()
 
     def shorten_path(self, path):
+        """ Shortens the path generated from a BFS search."""
         new_path = deque()
 
         def path_tile_is_turn(i):
@@ -215,6 +218,7 @@ class Ai:
         return filter(self.filter_tile_neighbors, neighbors)
 
     def filter_tile_neighbors(self, coord):
+        """ Checks if the neighbor tile is ok to travel to. """
         x_in_bounds = coord.x >= 0 and coord.x <= self.MAX_X
         y_in_bounds = coord.y >= 0 and coord.y <= self.MAX_Y
 

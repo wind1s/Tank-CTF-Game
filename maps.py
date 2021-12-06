@@ -5,6 +5,7 @@ import json
 import pygame as pyg
 from images import CTFImages
 from gameobjects import Box
+from utility import get_tile_position
 
 
 class CTFMap:
@@ -27,6 +28,17 @@ class CTFMap:
     def box_at(self, x, y):
         """ Return the type of the box at coordinates (x, y). """
         return self.boxes[y][x]
+
+    def update_boxes(self, game_objects):
+        new_boxes_pos = [[0 for _ in range(self.width)]
+                         for k in range(self.height)]
+        for obj in game_objects:
+
+            if isinstance(obj, Box):
+                tile_x, tile_y = get_tile_position(obj.get_pos())
+                new_boxes_pos[tile_y][tile_x] = obj.box_type
+
+        self.boxes = new_boxes_pos
 
     @staticmethod
     def load_map(map_file_name):

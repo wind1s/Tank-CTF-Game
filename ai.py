@@ -1,7 +1,9 @@
 import pymunk as pym
 import random as rand
 import math
-import utility
+from utility import (
+    get_tile_position, angle_between_vectors, periodic_difference_of_angles,
+    seconds_to_ms, reduce_until_zero)
 from collections import deque
 from gameobjects import (Tank, Flag, Box)
 
@@ -14,7 +16,8 @@ class Ai:
     """
 
     MIN_ANGLE_DIF = math.radians(2)
-    MIN_POS_DIFF = 0.2
+    MIN_POS_DIFF = 0.1
+    MAX_STUCK_TIME = seconds_to_ms(1)
 
     def __init__(self, tank, game_objects, space, current_map):
         self.tank = tank
@@ -25,6 +28,7 @@ class Ai:
         self.flag = None
         self.MAX_X = current_map.width - 1
         self.MAX_Y = current_map.height - 1
+        self.stuck_timeout = self.MAX_STUCK_TIME
 
         self.path = deque()
         self.move_cycle = self.move_cycle_gen()
@@ -33,8 +37,10 @@ class Ai:
         self.tank.max_speed = self.tank.max_speed*1.3
         self.tank.bullet_max_speed = self.tank.bullet_max_speed*1.5
 
-    def decide(self):
+    def decide(self, clock):
         """ Main decision function that gets called on every tick of the game. """
+        self.stuck_timeout = reduce_until_zero(
+            self.stuck_timeout, clock.get_time())
         next(self.move_cycle)
         self.maybe_shoot()
 
@@ -68,14 +74,14 @@ class Ai:
     def turn(self, next_coord):
         """ Turns the tank toward a coordinate. """
 
-        target_angle = utility.angle_between_vectors(
+        target_angle = angle_between_vectors(
             self.tank.get_pos(), next_coord)
 
-        current_diff = utility.periodic_difference_of_angles(
+        current_diff = periodic_difference_of_angles(
             self.tank.get_angle(), target_angle)
 
-        if current_diff > math.pi:
-            current_diff -= 2 * math.pi
+        current_diff -= 2*math.pi if current_diff > math.pi else 0
+
         if current_diff > 0:
             self.tank.turn_left()
         else:
@@ -85,12 +91,12 @@ class Ai:
         """ Checks if tank is standing close to the same angle as the coord. """
         def angle_diff():
             """ Adds a random value to position diff to make ai more human. """
-            return Ai.MIN_ANGLE_DIF + math.radians(rand.random())
+            return self.MIN_ANGLE_DIF + math.radians(rand.random())
 
-        target_angle = utility.angle_between_vectors(
+        target_angle = angle_between_vectors(
             self.tank.get_pos(), next_coord)
 
-        current_diff = utility.periodic_difference_of_angles(
+        current_diff = periodic_difference_of_angles(
             self.tank.get_angle(), target_angle)
 
         # Add random value to make ai's movement different.
@@ -100,7 +106,7 @@ class Ai:
         """ Checks if the tank is standing close enought to the coord. """
         def pos_diff():
             """ Adds a random value to position diff to make ai more human. """
-            return Ai.MIN_POS_DIFF + rand.random()/10
+            return self.MIN_POS_DIFF + rand.random()/10
 
         return self.tank.get_pos().get_distance(next_coord) <= pos_diff()
 
@@ -110,17 +116,17 @@ class Ai:
         """
 
         while True:
-            countdown = 200
-            self.get_updated_map()
             path = self.find_shortest_path(
                 self.tank.get_pos(),
                 self.get_target_tile(),
                 False)
+
             if not path:
                 path = self.find_shortest_path(
                     self.tank.get_pos(),
                     self.get_target_tile(),
                     True)
+
             if not path:
                 yield
                 continue  # Start from the top of our cycle
@@ -143,8 +149,8 @@ class Ai:
             self.tank.accelerate()
 
             while not self.correct_pos(next_coord):
-                countdown -= 1
-                if countdown <= 0:
+                if self.stuck_timeout <= 0:
+                    self.stuck_timeout = self.MAX_STUCK_TIME
                     break
                 yield
 
@@ -169,7 +175,7 @@ class Ai:
         A simple Breadth First Search using integer coordinates as our nodes.
         Edges are calculated as we go, using an external function.
         """
-        origin = utility.get_tile_position(origin)
+        origin = get_tile_position(origin)
         paths = {origin.int_tuple: [origin]}
         queue = deque([origin])
         visited = set()
@@ -183,7 +189,6 @@ class Ai:
                 return deque(shortest_path)
 
             for neighbor in self.get_tile_neighbors(node, include_metal):
-                print(neighbor)
                 if neighbor.int_tuple not in visited:
                     queue.append(neighbor)
                     visited.add(neighbor.int_tuple)
@@ -199,11 +204,10 @@ class Ai:
             return the position of our home base.
         """
         if self.tank.flag is not None:
-            x, y = self.tank.start_position
-        else:
-            self.get_flag()  # Ensure that we have initialized it.
-            x, y = self.flag.x, self.flag.y
-        return pym.Vec2d(int(x), int(y))
+            return get_tile_position(self.tank.start_position)
+
+        self.get_flag()  # Ensure that we have initialized it.
+        return get_tile_position((self.flag.x, self.flag.y))
 
     def get_flag(self):
         """ This has to be called to get the flag, since we don't know
@@ -217,30 +221,19 @@ class Ai:
                     break
         return self.flag
 
-    def get_updated_map(self):
-        new_map = self.current_map
-        updated_boxes = [[0 for j in range(new_map.width)]
-                         for i in range(new_map.height)]
-        for obj in self.game_objects:
-            if type(obj) == Box:
-                tile_x = int(obj.body.position.x)
-                tile_y = int(obj.body.position.y)
-                updated_boxes[tile_y][tile_x] = obj.box_type
-
-        return False
-
     def get_tile_neighbors(self, coord_vec, include_metal):
         """ Returns all bordering grid squares of the input coordinate.
             A bordering square is only considered accessible if it is grass
             or a wooden box.
         """
-        pos_vec = utility.get_tile_position(coord_vec)
+        pos_vec = get_tile_position(coord_vec)
         # Find the coordinates of the tiles' four neighbors
         neighbors = [
             pos_vec + pym.Vec2d(0, -1),
             pos_vec + pym.Vec2d(-1, 0),
             pos_vec + pym.Vec2d(0, 1),
-            pos_vec + pym.Vec2d(1, 0)]
+            pos_vec + pym.Vec2d(1, 0)
+        ]
 
         out = []
         for coord in neighbors:
@@ -248,7 +241,7 @@ class Ai:
                 out.append(coord)
         return out
 
-    def filter_tile_neighbors(self, coord, include_metal):
+    def filter_tile_neighbors(self, coord, include_metal_box):
         x_in_bounds = coord.x >= 0 and coord.x <= self.MAX_X
         y_in_bounds = coord.y >= 0 and coord.y <= self.MAX_Y
 
@@ -260,7 +253,5 @@ class Ai:
         box_is_grass = box_type == Box.GRASS_TYPE
         box_is_metal = box_type == Box.METALBOX_TYPE
 
-        if include_metal:
-            return box_is_grass or box_is_wood or box_is_metal
-        else:
-            return box_is_grass or box_is_wood
+        return box_is_grass or box_is_wood or (
+            include_metal_box and box_is_metal)

@@ -1,6 +1,6 @@
 import math
 import pymunk as pym
-from utility import (seconds_to_ms, clamp)
+from utility import (reduce_until_zero, seconds_to_ms, clamp)
 from baseobjects import (GamePhysicsObject, GameVisibleObject)
 from sounds import CTFSounds
 from images import CTFImages
@@ -101,8 +101,11 @@ class Tank(GamePhysicsObject):
     def update_timers(self, clock):
         # Reduce timers by time this tick took.
         time_passed = clock.get_time()
-        self.shoot_cooldown -= time_passed if self.shoot_cooldown >= 0 else 0
-        self.protection_time -= time_passed if self.protection_time >= 0 else 0
+
+        self.shoot_cooldown = reduce_until_zero(
+            self.shoot_cooldown, time_passed)
+        self.protection_time = reduce_until_zero(
+            self.protection_time, time_passed)
 
     def try_grab_flag(self, flag):
         """ Call this function to try to grab the flag, if the flag is not on other tank
@@ -243,6 +246,12 @@ class Box(GamePhysicsObject):
         self.box_type = box_type
         self.hit_points = Box.MAX_HIT_POINTS
         self.shape.collision_type = Box.COLLISION_TYPE
+
+    def get_pos(self):
+        return self.body.position
+
+    def get_angle(self):
+        return self.body.angle
 
     @staticmethod
     def get_box_with_type(x, y, box_type, space):

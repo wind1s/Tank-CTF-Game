@@ -96,6 +96,9 @@ class CTFGame:
             # Update physics of objects. Change speed, pos, acceleration etc.
             self.update_objects()
 
+            # Update the positions of boxes on the map.
+            self.current_map.update_boxes(self.game_objects)
+
             # Check collisions and update the objects position
             self.space.step(1 / FRAMERATE)
 
@@ -148,4 +151,4 @@ class CTFGame:
     def update_ai_decision(self):
         """ Updated the next decision of ai's. """
         for ai_obj in self.ai_objects:
-            ai_obj.decide()
+            ai_obj.decide(self.clock)

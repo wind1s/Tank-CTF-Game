@@ -31,6 +31,13 @@ class CTFMap:
         return self.boxes[y][x]
 
     @staticmethod
+    def create(boxes, start_positions, flag_position):
+        map_width = len(boxes[0])
+        map_height = len(boxes)
+        return CTFMap(
+            map_width, map_height, boxes, start_positions, flag_position)
+
+    @staticmethod
     def check_map_obj(boxes, start_positions, flag_position):
 
         n_rows = len(boxes[0])
@@ -70,7 +77,10 @@ class CTFMap:
         #assert False, "Reading txt map files is not implemented yet!"
         ctfmap_object = pickle.load(map_file)
         CTFMap.check_txt_file(ctfmap_object)
-        return ctfmap_object
+
+        return CTFMap.create(
+            ctfmap_object.boxes, ctfmap_object.start_positions, ctfmap_object.
+            flag_position)
 
     @staticmethod
     def load_json_map(map_file):
@@ -78,14 +88,10 @@ class CTFMap:
         json_obj = json.load(map_file)
         CTFMap.check_json_file(json_obj)
 
-        boxes = json_obj[MAP_BOXES_REF]
-        map_width = len(boxes[0])
-        map_height = len(boxes)
-        start_positions = json_obj[MAP_START_POS_REF]
-        flag_position = json_obj[MAP_FLAG_POS_REF]
-
-        return CTFMap(
-            map_width, map_height, boxes, start_positions, flag_position)
+        return CTFMap.create(
+            json_obj[MAP_BOXES_REF],
+            json_obj[MAP_START_POS_REF],
+            json_obj[MAP_FLAG_POS_REF])
 
     @staticmethod
     def check_txt_file(map_obj):
@@ -109,50 +115,54 @@ class CTFMap:
             json_obj[MAP_FLAG_POS_REF])
 
 
-"""
-map0 = CTFMap(
-    9, 9,
-    [[0, 1, 0, 0, 0, 0, 0, 1, 0],
-     [0, 1, 0, 2, 0, 2, 0, 1, 0],
-     [0, 2, 0, 1, 0, 1, 0, 2, 0],
-     [0, 0, 0, 1, 0, 1, 0, 0, 0],
-     [1, 1, 0, 3, 0, 3, 0, 1, 1],
-     [0, 0, 0, 1, 0, 1, 0, 0, 0],
-     [0, 2, 0, 1, 0, 1, 0, 2, 0],
-     [0, 1, 0, 2, 0, 2, 0, 1, 0],
-     [0, 1, 0, 0, 0, 0, 0, 1, 0]],
-    [[0.5, 0.5, 0],
-     [8.5, 0.5, 0],
-     [0.5, 8.5, 180],
-     [8.5, 8.5, 180]],
-    [4.5, 4.5])
+if __name__ == "__main__":
+    map0 = CTFMap(
+        9, 9,
+        [[0, 1, 0, 0, 0, 0, 0, 1, 0],
+         [0, 1, 0, 2, 0, 2, 0, 1, 0],
+            [0, 2, 0, 1, 0, 1, 0, 2, 0],
+            [0, 0, 0, 1, 0, 1, 0, 0, 0],
+            [1, 1, 0, 3, 0, 3, 0, 1, 1],
+            [0, 0, 0, 1, 0, 1, 0, 0, 0],
+            [0, 2, 0, 1, 0, 1, 0, 2, 0],
+            [0, 1, 0, 2, 0, 2, 0, 1, 0],
+            [0, 1, 0, 0, 0, 0, 0, 1, 0]],
+        [[0.5, 0.5, 0],
+         [8.5, 0.5, 0],
+            [0.5, 8.5, 180],
+            [8.5, 8.5, 180]],
+        [4.5, 4.5])
 
-map1 = CTFMap(
-    15, 11,
-    [[0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0],
-     [0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0],
-     [0, 1, 0, 3, 1, 1, 0, 0, 0, 1, 1, 3, 0, 1, 0],
-     [0, 2, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 0, 2, 0],
-     [2, 1, 0, 1, 1, 0, 1, 3, 1, 0, 1, 1, 0, 1, 2],
-     [1, 1, 3, 0, 3, 2, 3, 0, 3, 2, 3, 0, 3, 1, 1],
-     [2, 1, 0, 1, 1, 0, 1, 3, 1, 0, 1, 1, 0, 1, 2],
-     [0, 2, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 0, 2, 0],
-     [0, 1, 0, 3, 1, 1, 0, 0, 0, 1, 1, 3, 0, 1, 0],
-     [0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0],
-     [0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0]],
-    [[0.5, 0.5, 0],
-     [14.5, 0.5, 0],
-     [0.5, 10.5, 180],
-     [14.5, 10.5, 180],
-     [7.5, 0.5, 0],
-     [7.5, 10.5, 180]],
-    [7.5, 5.5])
+    map1 = CTFMap(
+        15, 11,
+        [[0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0],
+         [0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0],
+         [0, 1, 0, 3, 1, 1, 0, 0, 0, 1, 1, 3, 0, 1, 0],
+         [0, 2, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 0, 2, 0],
+         [2, 1, 0, 1, 1, 0, 1, 3, 1, 0, 1, 1, 0, 1, 2],
+         [1, 1, 3, 0, 3, 2, 3, 0, 3, 2, 3, 0, 3, 1, 1],
+         [2, 1, 0, 1, 1, 0, 1, 3, 1, 0, 1, 1, 0, 1, 2],
+         [0, 2, 0, 0, 3, 0, 0, 2, 0, 0, 3, 0, 0, 2, 0],
+         [0, 1, 0, 3, 1, 1, 0, 0, 0, 1, 1, 3, 0, 1, 0],
+         [0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0],
+         [0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0]],
+        [[0.5, 0.5, 0],
+         [14.5, 0.5, 0],
+         [0.5, 10.5, 180],
+         [14.5, 10.5, 180],
+         [7.5, 0.5, 0],
+         [7.5, 10.5, 180]],
+        [7.5, 5.5])
 
-map2 = CTFMap(10, 5,
-              [[0, 2, 0, 2, 0, 0, 2, 0, 2, 0],
-               [0, 3, 0, 1, 3, 3, 1, 0, 3, 0],
-               [0, 1, 0, 1, 0, 0, 1, 0, 1, 0],
-               [0, 3, 0, 1, 3, 3, 1, 0, 3, 0],
-               [0, 2, 0, 2, 0, 0, 2, 0, 2, 0]],
-              [[0.5, 2.5, 270], [9.5, 2.5, 90]], [5, 2.5])
-"""
+    map2 = CTFMap(10, 5,
+                  [[0, 2, 0, 2, 0, 0, 2, 0, 2, 0],
+                   [0, 3, 0, 1, 3, 3, 1, 0, 3, 0],
+                      [0, 1, 0, 1, 0, 0, 1, 0, 1, 0],
+                      [0, 3, 0, 1, 3, 3, 1, 0, 3, 0],
+                      [0, 2, 0, 2, 0, 0, 2, 0, 2, 0]],
+                  [[0.5, 2.5, 270], [9.5, 2.5, 90]], [5, 2.5])
+
+    # Serialize all map objects to txt files.
+    for i in range(3):
+        with open(f"./map_files/map{i}.txt", "wb") as file:
+            pickle.dump(repr(f"map{i}"), file)

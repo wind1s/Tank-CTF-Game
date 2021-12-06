@@ -35,7 +35,7 @@ class Ai:
 
         # Buff tanks.
         self.tank.max_speed = self.tank.max_speed*1.3
-        self.tank.bullet_max_speed = self.tank.bullet_max_speed*1.5
+        self.tank.bullet_max_speed = self.tank.bullet_max_speed*1.2
 
     def decide(self, clock):
         """ Main decision function that gets called on every tick of the game. """
@@ -68,8 +68,8 @@ class Ai:
 
             if isinstance(parent, Tank) or (
                     isinstance(parent, Box) and parent.box_type
-                    in (Box.WOODBOX_TYPE, Box.METALBOX_TYPE)):
-                self.tank.shoot(self.space, self.game_objects)
+                    in (Box.WOODBOX_TYPE, )):
+                self.tank.shoot(self.game_objects)
 
     def turn(self, next_coord):
         """ Turns the tank toward a coordinate. """

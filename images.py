@@ -21,9 +21,12 @@ class CTFImages():
         CTFImages.explosion = self.load_image('explosion.png')
         CTFImages.grass = self.load_image('grass.png')
         CTFImages.rockbox = self.load_image('rockbox.png')
-        CTFImages.metalbox = self.load_image('metalbox.png')
         CTFImages.woodbox = self.load_image('woodbox.png')
-        CTFImages.flag = self.load_image('flag.png')  # Image of flag
+        CTFImages.flag = self.load_image('flag.png')
+
+        CTFImages.metalbox = self.load_image('metalbox.png')
+        CTFImages.metalbox = pyg.transform.scale(
+            CTFImages.metalbox, (20, 20))
 
         CTFImages.bullet = self.load_image('bullet.png')
         CTFImages.bullet = pyg.transform.scale(

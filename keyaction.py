@@ -81,11 +81,11 @@ class KeyAction():
 
     def keydown_k_space(self):
         """ Performs key down space keybinding functionality. """
-        self.player1_tank.shoot(self.space, self.game_objects)
+        self.player1_tank.shoot(self.game_objects)
 
     def keydown_k_x(self):
         """ Performs key down x keybinding functionality. """
-        self.player2_tank.shoot(self.space, self.game_objects)
+        self.player2_tank.shoot(self.game_objects)
 
     def keydown_k_up(self):
         """ Performs key down up arrow keybinding functionality. """

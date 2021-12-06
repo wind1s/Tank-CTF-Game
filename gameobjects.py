@@ -1,6 +1,7 @@
 import math
 import pymunk as pym
-from utility import (reduce_until_zero, seconds_to_ms, clamp)
+from utility import (reduce_until_zero, seconds_to_ms,
+                     clamp, get_tile_position)
 from baseobjects import (GamePhysicsObject, GameVisibleObject)
 from sounds import CTFSounds
 from images import CTFImages
@@ -25,6 +26,7 @@ class Tank(GamePhysicsObject):
         self.body.angular_velocity = 0
 
         # This variable is used to access the flag object, if the current tank is carrying the flag
+        self.space = space
         self.flag = None
         self.max_speed = Tank.NORMAL_MAX_SPEED
         self.bullet_max_speed = Bullet.MAX_SPEED
@@ -91,7 +93,7 @@ class Tank(GamePhysicsObject):
         # If the tank carries the flag, then update the positon of the flag
         self.update_timers(clock)
 
-        if(self.flag != None):
+        if self.flag != None:
             self.flag.x, self.flag.y = self.get_pos()
             self.flag.orientation = -math.degrees(self.get_angle())
         # Else ensure that the tank has its normal max speed
@@ -124,6 +126,8 @@ class Tank(GamePhysicsObject):
     def try_drop_flag(self):
         """ If tank has the flag, drop it."""
         if self.flag is not None:
+            self.flag.x, self.flag.y = get_tile_position(
+                self.get_pos()) + pym.Vec2d(0.5, 0.5)
             self.flag.is_on_tank = False
             self.flag = None
 
@@ -132,7 +136,7 @@ class Tank(GamePhysicsObject):
         return self.flag is not None and (
             self.start_position - self.body.position).length < 0.2
 
-    def shoot(self, space, game_objects):
+    def shoot(self, game_objects):
         """ Call this function to shoot a missile """
         if self.shoot_cooldown > 0:
             return
@@ -143,14 +147,11 @@ class Tank(GamePhysicsObject):
         tank_angle = self.get_angle()
 
         offset_vector = pym.Vec2d(0, 0.5).rotated(tank_angle)
-        bullet_x = self.body.position[0] + offset_vector.x
-        bullet_y = self.body.position[1] + offset_vector.y
+        bullet_vec = self.get_pos() + offset_vector
         orientation = tank_angle
 
-        game_objects.append(
-            Bullet(
-                self, bullet_x, bullet_y, orientation,
-                self.bullet_max_speed, CTFImages.bullet, space))
+        Bullet.create(game_objects, self, bullet_vec, orientation,
+                      self.bullet_max_speed, self.space)
 
     def get_shot(self):
         """ Reduces hitpoints if the tank has no protection. """
@@ -160,10 +161,12 @@ class Tank(GamePhysicsObject):
 
         self.hit_points -= 1
 
-    def respawn(self):
+    def respawn(self, game_objects):
         """ Respawns the tank if it's hitpoints are 0. Returns if tank respawned. """
         if self.hit_points > 0:
             return False
+
+        Explosion.create(self.get_pos(), game_objects)
 
         self.hit_points = self.max_hit_points
         self.shoot_cooldown = 0
@@ -228,6 +231,12 @@ class Bullet(GamePhysicsObject):
 
     def get_angle(self):
         return self.body.angle
+
+    @staticmethod
+    def create(game_objects, tank, pos_vec, orientation, speed, space):
+        game_objects.append(
+            Bullet(
+                tank, *pos_vec, orientation, speed, CTFImages.bullet, space))
 
 
 class Box(GamePhysicsObject):
@@ -301,3 +310,8 @@ class Explosion(GameVisibleObject):
             self.explosion_time -= clock.get_time()
         else:
             self.game_objects.remove(self)
+
+    @staticmethod
+    def create(pos_vec, game_objects):
+        game_objects.append(Explosion(
+            *pos_vec, CTFImages.explosion, game_objects))

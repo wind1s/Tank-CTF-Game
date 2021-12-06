@@ -46,8 +46,6 @@ class CollisionHandler():
     def collision_bullet(self, bullet_shape):
         """ Handles bullet collisions. """
         bullet = bullet_shape.parent
-        self.game_objects.append(Explosion(
-            *bullet.get_pos(), CTFImages.explosion, self.game_objects))
 
         bullet.set_velocity(0)
         self.remove_object(bullet, bullet_shape)
@@ -59,7 +57,7 @@ class CollisionHandler():
         tank = tank_shape.parent
         tank.get_shot()
 
-        if tank.respawn():
+        if tank.respawn(self.game_objects):
             for ai in self.ai_objects:
                 if ai.tank is tank:
                     ai.move_cycle = ai.move_cycle_gen()
@@ -73,4 +71,5 @@ class CollisionHandler():
             box.hit_points -= 1
 
             if box.hit_points <= 0:
+                Explosion.create(box.get_pos(), self.game_objects)
                 self.remove_object(box, box_shape)

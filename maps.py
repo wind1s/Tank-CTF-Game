@@ -2,6 +2,7 @@ from config import (MAP_PATH, MAP_START_POS_REF,
                     MAP_BOXES_REF, MAP_FLAG_POS_REF)
 import os
 import json
+import pickle
 import pygame as pyg
 from images import CTFImages
 from gameobjects import Box
@@ -44,7 +45,7 @@ class CTFMap:
     def load_map(map_file_name):
         """ Loads a map file. """
 
-        with open(os.path.join(MAP_PATH, map_file_name), "r") as outfile:
+        with open(os.path.join(MAP_PATH, map_file_name), "rb") as outfile:
             if map_file_name.endswith(".txt"):
                 return CTFMap.load_txt_map(outfile)
             elif map_file_name.endswith(".json"):
@@ -55,8 +56,10 @@ class CTFMap:
     @staticmethod
     def load_txt_map(map_file):
         """ Loads a map from a txt file. """
-        assert False, "Reading txt map files is not implemented yet!"
-        return
+        #assert False, "Reading txt map files is not implemented yet!"
+        ctfmap_object = pickle.load(map_file)
+        CTFMap.check_txt_file(ctfmap_object)
+        return ctfmap_object
 
     @staticmethod
     def load_json_map(map_file):
@@ -72,6 +75,12 @@ class CTFMap:
 
         return CTFMap(
             map_width, map_height, boxes, start_positions, flag_position)
+
+    @staticmethod
+    def check_txt_file(map_obj):
+        """ Checks if a txt map file contains a CTFMap object. """
+        assert isinstance(
+            map_obj, CTFMap), "txt file does not contain a CTFMap object!"
 
     @staticmethod
     def check_json_file(json_obj):

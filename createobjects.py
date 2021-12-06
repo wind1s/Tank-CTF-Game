@@ -37,7 +37,6 @@ def create_tanks(current_map, space):
     n_tanks = len(current_map.start_positions)
     pos = current_map.start_positions
 
-    #
     return [Tank(pos[i][0], pos[i][1], pos[i][2], CTFImages.tank_images[i],
                  space, Tank.HIT_POINTS) for i in range(n_tanks)]
 

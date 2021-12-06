@@ -37,16 +37,16 @@ class CTFGame:
         self.skip_update = 0
 
         # Create game objects.
-        self.boxes = cobj.create_boxes(self.current_map, self.space)
-        self.tanks = cobj.create_tanks(self.current_map, self.space)
+        boxes = cobj.create_boxes(self.current_map, self.space)
+        tanks = cobj.create_tanks(self.current_map, self.space)
+        bases = cobj.create_bases(self.current_map)
         self.flag = cobj.create_flag(self.current_map)
-        self.bases = cobj.create_bases(self.current_map)
 
-        self.game_objects = self.boxes + self.tanks + [self.flag] + self.bases
+        self.game_objects = boxes + tanks + [self.flag] + bases
 
         # Create ai's.
         self.ai_objects = cobj.create_ai(
-            self.tanks[1:],
+            tanks[1:],
             self.game_objects, self.space, self.current_map)
 
         # Set game mode.
@@ -54,12 +54,12 @@ class CTFGame:
         self.player2_tank = None
 
         def set_singleplayer():
-            self.player1_tank = self.tanks[0]
+            self.player1_tank = tanks[0]
 
         def set_hot_multiplayer():
             self.ai_objects.remove(self.ai_objects[-1])
-            self.player1_tank = self.tanks[0]
-            self.player2_tank = self.tanks[-1]
+            self.player1_tank = tanks[0]
+            self.player2_tank = tanks[-1]
 
         def set_co_op():
             assert False, "co-op not implemented!"

@@ -13,7 +13,7 @@ if len(argv) > 1:
 else:
     game_mode = "--singleplayer"
 
-game_map = maps.map0
+game_map = maps.map1
 
 game = CTFGame(game_mode, game_map)
 game.run_loop()

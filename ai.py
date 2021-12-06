@@ -14,13 +14,14 @@ class Ai:
     """
 
     MIN_ANGLE_DIF = math.radians(2)
-    MIN_POS_DIFF = 0.1
+    MIN_POS_DIFF = 0.15
 
     def __init__(self, tank, game_objects, space, current_map):
         self.tank = tank
         self.game_objects = game_objects
         self.space = space
         self.current_map = current_map
+        self.updated_map = current_map
         self.flag = None
         self.MAX_X = current_map.width - 1
         self.MAX_Y = current_map.height - 1
@@ -105,9 +106,17 @@ class Ai:
         """
 
         while True:
+            countdown = 200
+            self.get_updated_map()
             path = self.find_shortest_path(
                 self.tank.get_pos(),
-                self.get_target_tile())
+                self.get_target_tile(), 
+                False)
+            if not path:
+                path = self.find_shortest_path(
+                self.tank.get_pos(),
+                self.get_target_tile(), 
+                True)
             if not path:
                 yield
                 continue  # Start from the top of our cycle
@@ -130,6 +139,9 @@ class Ai:
             self.tank.accelerate()
 
             while not self.correct_pos(next_coord):
+                countdown -= 1
+                if countdown <= 0:
+                    break
                 yield
 
             self.tank.stop_moving()
@@ -147,7 +159,7 @@ class Ai:
 
         return new_path
 
-    def find_shortest_path(self, origin, target):
+    def find_shortest_path(self, origin, target, include_metal):
         """ 
         A simple Breadth First Search using integer coordinates as our nodes.
         Edges are calculated as we go, using an external function.
@@ -165,7 +177,8 @@ class Ai:
                 shortest_path.append(node)
                 return deque(shortest_path)
 
-            for neighbor in self.get_tile_neighbors(node):
+            for neighbor in self.get_tile_neighbors(node, include_metal):
+                print(neighbor)
                 if neighbor.int_tuple not in visited:
                     queue.append(neighbor)
                     visited.add(neighbor.int_tuple)
@@ -199,7 +212,18 @@ class Ai:
                     break
         return self.flag
 
-    def get_tile_neighbors(self, coord_vec):
+    def get_updated_map(self):
+        new_map = self.current_map
+        updated_boxes = [[0 for j in range(new_map.width)] for i in range(new_map.height)]
+        for obj in self.game_objects:
+            if type(obj) == Box:
+                tile_x = int(obj.body.position.x)
+                tile_y = int(obj.body.position.y)
+                updated_boxes[tile_y][tile_x] = obj.box_type
+
+        return False
+
+    def get_tile_neighbors(self, coord_vec, include_metal):
         """ Returns all bordering grid squares of the input coordinate.
             A bordering square is only considered accessible if it is grass
             or a wooden box.
@@ -212,18 +236,25 @@ class Ai:
             pos_vec + pym.Vec2d(0, 1),
             pos_vec + pym.Vec2d(1, 0)]
 
-        return filter(self.filter_tile_neighbors, neighbors)
+        out = []
+        for coord in neighbors:
+            if self.filter_tile_neighbors(coord, include_metal):
+                out.append(coord)
+        return out
 
-    def filter_tile_neighbors(self, coord):
+    def filter_tile_neighbors(self, coord, include_metal):
         x_in_bounds = coord.x >= 0 and coord.x <= self.MAX_X
         y_in_bounds = coord.y >= 0 and coord.y <= self.MAX_Y
 
         if not (x_in_bounds and y_in_bounds):
             return False
 
-        box_type = self.current_map.box_at(coord.x, coord.y)
+        box_type = self.updated_map.box_at(coord.x, coord.y)
         box_is_wood = box_type == Box.WOODBOX_TYPE
         box_is_grass = box_type == Box.GRASS_TYPE
         box_is_metal = box_type == Box.METALBOX_TYPE
 
-        return box_is_grass or box_is_wood or box_is_metal
+        if include_metal:
+            return box_is_grass or box_is_wood or box_is_metal
+        else:
+            return box_is_grass or box_is_wood

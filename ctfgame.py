@@ -58,6 +58,7 @@ class CTFGame:
 
         def set_hot_multiplayer():
             self.ai_objects.remove(self.ai_objects[-1])
+            self.player1_tank = self.tanks[0]
             self.player2_tank = self.tanks[-1]
 
         def set_co_op():

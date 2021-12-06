@@ -14,7 +14,7 @@ class Ai:
     """
 
     MIN_ANGLE_DIF = math.radians(2)
-    MIN_POS_DIFF = 0.15
+    MIN_POS_DIFF = 0.2
 
     def __init__(self, tank, game_objects, space, current_map):
         self.tank = tank
@@ -74,6 +74,8 @@ class Ai:
         current_diff = utility.periodic_difference_of_angles(
             self.tank.get_angle(), target_angle)
 
+        if current_diff > math.pi:
+            current_diff -= 2 * math.pi
         if current_diff > 0:
             self.tank.turn_left()
         else:

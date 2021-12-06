@@ -9,38 +9,41 @@ from gameobjects import (Tank, Flag, Box)
 
 
 class Ai:
-    """ 
+    """
     A simple ai that finds the shortest path to the target using
     a breadth first search. Also capable of shooting other tanks and or wooden
-    boxes. 
+    boxes.
     """
 
     MIN_ANGLE_DIF = math.radians(2)
     MIN_POS_DIFF = 0.1
-    MAX_STUCK_TIME = seconds_to_ms(1)
+    MAX_STUCK_TIME = seconds_to_ms(1.5)
 
-    def __init__(self, tank, game_objects, space, current_map):
-        self.tank = tank
-        self.game_objects = game_objects
+    def __init__(self, tank, game_objects, space, current_map, clock):
         self.space = space
-        self.current_map = current_map
-        self.updated_map = current_map
+        self.clock = clock
+
+        # Buff tanks.
+        tank.max_speed = tank.max_speed*1.3
+        tank.bullet_max_speed = tank.bullet_max_speed*1.2
+        self.tank = tank
+
         self.flag = None
+        self.game_objects = game_objects
+
+        self.current_map = current_map
+        self.updated_boxes = current_map.boxes
+
         self.MAX_X = current_map.width - 1
         self.MAX_Y = current_map.height - 1
+
         self.stuck_timeout = self.MAX_STUCK_TIME
 
         self.path = deque()
         self.move_cycle = self.move_cycle_gen()
 
-        # Buff tanks.
-        self.tank.max_speed = self.tank.max_speed*1.3
-        self.tank.bullet_max_speed = self.tank.bullet_max_speed*1.2
-
-    def decide(self, clock):
+    def decide(self):
         """ Main decision function that gets called on every tick of the game. """
-        self.stuck_timeout = reduce_until_zero(
-            self.stuck_timeout, clock.get_time())
         next(self.move_cycle)
         self.maybe_shoot()
 
@@ -116,6 +119,8 @@ class Ai:
         """
 
         while True:
+            self.update_box_pos()
+
             path = self.find_shortest_path(
                 self.tank.get_pos(),
                 self.get_target_tile(),
@@ -135,7 +140,6 @@ class Ai:
             path.popleft()
 
             next_coord = path.popleft() + pym.Vec2d(0.5, 0.5)
-            self.tank.stop_moving()
             yield
 
             self.turn(next_coord)
@@ -149,6 +153,8 @@ class Ai:
             self.tank.accelerate()
 
             while not self.correct_pos(next_coord):
+                self.stuck_timeout = reduce_until_zero(
+                    self.stuck_timeout, self.clock.get_time())
                 if self.stuck_timeout <= 0:
                     self.stuck_timeout = self.MAX_STUCK_TIME
                     break
@@ -171,7 +177,7 @@ class Ai:
         return new_path
 
     def find_shortest_path(self, origin, target, include_metal):
-        """ 
+        """
         A simple Breadth First Search using integer coordinates as our nodes.
         Edges are calculated as we go, using an external function.
         """
@@ -198,6 +204,15 @@ class Ai:
             del paths[node.int_tuple]
 
         return deque([])
+
+    def update_box_pos(self):
+        self.updated_boxes = [[0 for _ in range(self.current_map.width)]
+                              for k in range(self.current_map.height)]
+
+        for obj in self.game_objects:
+            if isinstance(obj, Box):
+                tile_x, tile_y = get_tile_position(obj.get_pos())
+                self.updated_boxes[tile_y][tile_x] = obj.box_type
 
     def get_target_tile(self):
         """ Returns position of the flag if we don't have it. If we do have the flag,
@@ -248,7 +263,7 @@ class Ai:
         if not (x_in_bounds and y_in_bounds):
             return False
 
-        box_type = self.updated_map.box_at(coord.x, coord.y)
+        box_type = self.updated_boxes[coord.y][coord.x]
         box_is_wood = box_type == Box.WOODBOX_TYPE
         box_is_grass = box_type == Box.GRASS_TYPE
         box_is_metal = box_type == Box.METALBOX_TYPE

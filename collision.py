@@ -3,10 +3,11 @@ from images import CTFImages
 
 
 class CollisionHandler():
-    def __init__(self, space, game_objects, ai_objects):
+    def __init__(self, space, game_objects, ai_objects, clock):
         self.space = space
         self.game_objects = game_objects
         self.ai_objects = ai_objects
+        self.clock = clock
 
         self.add_collision_handler(
             Bullet.COLLISION_TYPE, Box.COLLISION_TYPE,
@@ -71,5 +72,5 @@ class CollisionHandler():
             box.hit_points -= 1
 
             if box.hit_points <= 0:
-                Explosion.create(box.get_pos(), self.game_objects)
+                Explosion.create(box.get_pos(), self.game_objects, self.clock)
                 self.remove_object(box, box_shape)

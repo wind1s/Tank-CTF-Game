@@ -38,7 +38,7 @@ class CTFGame:
 
         # Create game objects.
         boxes = cobj.create_boxes(self.current_map, self.space)
-        tanks = cobj.create_tanks(self.current_map, self.space)
+        tanks = cobj.create_tanks(self.current_map, self.space, self.clock)
         bases = cobj.create_bases(self.current_map)
         self.flag = cobj.create_flag(self.current_map)
 
@@ -47,7 +47,7 @@ class CTFGame:
         # Create ai's.
         self.ai_objects = cobj.create_ai(
             tanks[1:],
-            self.game_objects, self.space, self.current_map)
+            self.game_objects, self.space, self.current_map, self.clock)
 
         # Set game mode.
         self.player1_tank = None
@@ -77,7 +77,7 @@ class CTFGame:
         self.event_handler = EventHandler(game_mode, keyaction, self.quit)
 
         collision.CollisionHandler(
-            self.space, self.game_objects, self.ai_objects)
+            self.space, self.game_objects, self.ai_objects, self.clock)
 
     def quit(self):
         self.running = False
@@ -95,9 +95,6 @@ class CTFGame:
 
             # Update physics of objects. Change speed, pos, acceleration etc.
             self.update_objects()
-
-            # Update the positions of boxes on the map.
-            self.current_map.update_boxes(self.game_objects)
 
             # Check collisions and update the objects position
             self.space.step(1 / FRAMERATE)
@@ -141,7 +138,7 @@ class CTFGame:
                     print(f"Tank has won!")
                     self.restart()
 
-            obj.post_update(self.clock)
+            obj.post_update()
 
     def screen_update_objects(self):
         """ Updates the screen with changes to all objects. """
@@ -151,4 +148,4 @@ class CTFGame:
     def update_ai_decision(self):
         """ Updated the next decision of ai's. """
         for ai_obj in self.ai_objects:
-            ai_obj.decide(self.clock)
+            ai_obj.decide()

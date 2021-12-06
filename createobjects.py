@@ -23,22 +23,21 @@ def create_grass_background(current_map, screen):
 def create_boxes(current_map, space):
     """ Creates boxes at map coord with corresponding box type. """
     get_type = current_map.box_at
-    get_box = Box.get_box_with_type
 
     width = current_map.width
     height = current_map.height
 
-    return [get_box(x, y, get_type(x, y), space) for y in range(height)
+    return [Box.get_box_with_type(x, y, get_type(x, y), space) for y in range(height)
             for x in range(width) if get_type(x, y) != 0]
 
 
-def create_tanks(current_map, space):
+def create_tanks(current_map, space, clock):
     """ Creates a tank at the start positions. """
     n_tanks = len(current_map.start_positions)
     pos = current_map.start_positions
 
     return [Tank(pos[i][0], pos[i][1], pos[i][2], CTFImages.tank_images[i],
-                 space, Tank.HIT_POINTS) for i in range(n_tanks)]
+                 space, Tank.HIT_POINTS, clock) for i in range(n_tanks)]
 
 
 def create_bases(current_map):
@@ -70,5 +69,5 @@ def create_map_bounds(current_map, body):
     )
 
 
-def create_ai(tanks, game_objects, space, current_map):
-    return [Ai(tank, game_objects, space, current_map) for tank in tanks]
+def create_ai(tanks, game_objects, space, current_map, clock):
+    return [Ai(tank, game_objects, space, current_map, clock) for tank in tanks]

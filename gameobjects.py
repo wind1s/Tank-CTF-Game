@@ -18,15 +18,16 @@ class Tank(GamePhysicsObject):
     SHOOT_COOLDOWN_MS = seconds_to_ms(0.5)
     SPAWN_PROTECTION_MS = seconds_to_ms(3)
 
-    def __init__(self, x, y, orientation, sprite, space, hit_points):
+    def __init__(self, x, y, orientation, sprite, space, hit_points, clock):
         super().__init__(x, y, orientation, sprite, space, True)
 
         self.acceleration = 0  # 1 forward, 0 for stand still, -1 for backwards
         self.rotation = 0  # 1 clockwise, 0 for no rotation, -1 counter clockwise
         self.body.angular_velocity = 0
+        self.space = space
+        self.clock = clock
 
         # This variable is used to access the flag object, if the current tank is carrying the flag
-        self.space = space
         self.flag = None
         self.max_speed = Tank.NORMAL_MAX_SPEED
         self.bullet_max_speed = Bullet.MAX_SPEED
@@ -88,10 +89,10 @@ class Tank(GamePhysicsObject):
         self.body.angular_velocity = clamp(
             self.max_speed, self.body.angular_velocity)
 
-    def post_update(self, clock):
+    def post_update(self):
         """ Updates things tha depends on the tanks state. Such as the flags position. """
         # If the tank carries the flag, then update the positon of the flag
-        self.update_timers(clock)
+        self.update_timers()
 
         if self.flag != None:
             self.flag.x, self.flag.y = self.get_pos()
@@ -100,9 +101,9 @@ class Tank(GamePhysicsObject):
         else:
             self.max_speed = Tank.NORMAL_MAX_SPEED
 
-    def update_timers(self, clock):
+    def update_timers(self):
         # Reduce timers by time this tick took.
-        time_passed = clock.get_time()
+        time_passed = self.clock.get_time()
 
         self.shoot_cooldown = reduce_until_zero(
             self.shoot_cooldown, time_passed)
@@ -166,7 +167,7 @@ class Tank(GamePhysicsObject):
         if self.hit_points > 0:
             return False
 
-        Explosion.create(self.get_pos(), game_objects)
+        Explosion.create(self.get_pos(), game_objects, self.clock)
 
         self.hit_points = self.max_hit_points
         self.shoot_cooldown = 0
@@ -295,23 +296,24 @@ class Base(GameVisibleObject):
 
 
 class Explosion(GameVisibleObject):
-    def __init__(self, x, y, sprite, game_objects):
+    def __init__(self, x, y, sprite, game_objects, clock):
         super().__init__(x, y, sprite)
         self.explosion_time = 0.7 * 1000  # time in milliseconds
         self.game_objects = game_objects
+        self.clock = clock
 
-    def post_update(self, clock):
-        self.update_explosion(clock)
+    def post_update(self):
+        self.update_explosion()
 
-    def update_explosion(self, clock):
+    def update_explosion(self):
         """ Updates the explosion timer and removes it if timer expires. """
         # Reduce timers by time this tick took.
         if self.explosion_time >= 0:
-            self.explosion_time -= clock.get_time()
+            self.explosion_time -= self.clock.get_time()
         else:
             self.game_objects.remove(self)
 
     @staticmethod
-    def create(pos_vec, game_objects):
+    def create(pos_vec, game_objects, clock):
         game_objects.append(Explosion(
-            *pos_vec, CTFImages.explosion, game_objects))
+            *pos_vec, CTFImages.explosion, game_objects, clock))

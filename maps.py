@@ -30,16 +30,27 @@ class CTFMap:
         """ Return the type of the box at coordinates (x, y). """
         return self.boxes[y][x]
 
-    def update_boxes(self, game_objects):
-        new_boxes_pos = [[0 for _ in range(self.width)]
-                         for k in range(self.height)]
-        for obj in game_objects:
+    @staticmethod
+    def check_map_obj(boxes, start_positions, flag_position):
 
-            if isinstance(obj, Box):
-                tile_x, tile_y = get_tile_position(obj.get_pos())
-                new_boxes_pos[tile_y][tile_x] = obj.box_type
+        n_rows = len(boxes[0])
 
-        self.boxes = new_boxes_pos
+        entire_board_defined = all(len(row) == n_rows for row in boxes)
+        assert entire_board_defined, "Json file is incorrect, entire board is not defined in boxes positions."
+
+        correct_start_pos_format = all(len(start_pos) == 3
+                                       for start_pos in start_positions)
+        assert correct_start_pos_format, "The format of start positions is incorrect (x, y, orientation)."
+
+        start_pos_on_grass = all(
+            boxes[int(y)][int(x)] == Box.GRASS_TYPE for x, y,
+            _ in start_positions)
+        assert start_pos_on_grass, "All start positions are not place on a grass tile."
+
+        flag_pos_x, flag_pos_y = flag_position
+        flag_pos_on_grass = boxes[int(flag_pos_y)][int(
+            flag_pos_x)] == Box.GRASS_TYPE
+        assert flag_pos_on_grass, "Flag position is not on a grass tile."
 
     @staticmethod
     def load_map(map_file_name):
@@ -82,6 +93,9 @@ class CTFMap:
         assert isinstance(
             map_obj, CTFMap), "txt file does not contain a CTFMap object!"
 
+        CTFMap.check_map_obj(map_obj.boxes, map_obj.start_positions,
+                             map_obj.flag_position)
+
     @staticmethod
     def check_json_file(json_obj):
         """ Checks if json map file is correct. """
@@ -89,26 +103,10 @@ class CTFMap:
             assert setting in json_obj.keys(
             ), f"Setting {setting} is not defined in json map file."
 
-        boxes = json_obj[MAP_BOXES_REF]
-        n_rows = len(boxes[0])
-
-        entire_board_defined = all(len(row) == n_rows for row in boxes)
-        assert entire_board_defined, "Json file is incorrect, entire board is not defined in boxes positions."
-
-        start_positions = json_obj[MAP_START_POS_REF]
-        correct_start_pos_format = all(len(start_pos) == 3
-                                       for start_pos in start_positions)
-        assert correct_start_pos_format, "The format of start positions is incorrect (x, y, orientation)."
-
-        start_pos_on_grass = all(
-            boxes[int(y)][int(x)] == Box.GRASS_TYPE for x, y,
-            _ in start_positions)
-        assert start_pos_on_grass, "All start positions are not place on a grass tile."
-
-        flag_pos_x, flag_pos_y = json_obj[MAP_FLAG_POS_REF]
-        flag_pos_on_grass = boxes[int(flag_pos_y)][int(
-            flag_pos_x)] == Box.GRASS_TYPE
-        assert flag_pos_on_grass, "Flag position is not on a grass tile."
+        CTFMap.check_map_obj(
+            json_obj[MAP_BOXES_REF],
+            json_obj[MAP_START_POS_REF],
+            json_obj[MAP_FLAG_POS_REF])
 
 
 """

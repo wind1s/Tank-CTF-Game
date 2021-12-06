@@ -45,3 +45,8 @@ def get_tile_position(position_vector):
     """ Converts and returns the float position of our tank to an integer position. """
     x, y = position_vector
     return pym.Vec2d(int(x), int(y))
+
+
+def reduce_until_zero(val, reduction):
+    val -= reduction if val >= 0 else 0
+    return val

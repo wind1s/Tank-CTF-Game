@@ -20,7 +20,7 @@ class GameObject:
             Should update the current state (after a tick) of the object."""
         return
 
-    def post_update(self, clock):
+    def post_update(self):
         """ Should be implemented in a subclass. Make updates that depend on
             other objects than itself."""
 

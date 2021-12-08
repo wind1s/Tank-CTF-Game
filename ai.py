@@ -313,13 +313,16 @@ class Ai:
             neighbors, func=lambda vec: vec.int_tuple, pred=tile_pred)
 
     def filter_tile_neighbors(self, coord, include_metal_box):
-        x_in_bounds = coord.x >= 0 and coord.x <= self.MAX_X
-        y_in_bounds = coord.y >= 0 and coord.y <= self.MAX_Y
+        def get_box():
+            if 0 <= coord.x <= self.MAX_X and 0 <= coord.y <= self.MAX_Y:
+                return self.updated_boxes[coord.y][coord.x]
 
-        if not (x_in_bounds and y_in_bounds):
+            return None
+
+        box_type = get_box()
+        if box_type is None:
             return False
 
-        box_type = self.updated_boxes[coord.y][coord.x]
         box_is_wood = box_type == Box.WOODBOX_TYPE
         box_is_grass = box_type == Box.GRASS_TYPE
         box_is_metal = box_type == Box.METALBOX_TYPE

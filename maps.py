@@ -27,7 +27,7 @@ class CTFMap:
         return pyg.Rect(0, 0, TILE_SIZE*self.width, TILE_SIZE*self.height)
 
     def box_at(self, x, y):
-        """ Return the type of the box at coordinates (x, y). """
+        """ Return the type of the box at coordinates (x, y). None if out of bounds. """
         return self.boxes[y][x]
 
     @staticmethod

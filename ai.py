@@ -8,6 +8,21 @@ from collections import deque
 from gameobjects import (Tank, Flag, Box)
 
 
+class Node():
+    def __init__(self, tile, hcost, gcost, previous=None):
+        self.tile = tile
+        self.hcost = hcost
+        self.gcost = gcost
+        self.fcost = hcost + gcost
+        self.previous = previous
+
+    @staticmethod
+    def create_node(tile, origin, target, previous=None):
+        gcost = (target - tile).length
+        hcost = (origin - tile).length
+        return Node(tile, hcost, gcost, previous)
+
+
 class Ai:
     """
     A simple ai that finds the shortest path to the target using
@@ -158,9 +173,11 @@ class Ai:
             while not self.correct_pos(next_coord):
                 self.stuck_timeout = reduce_until_zero(
                     self.stuck_timeout, self.clock.get_time())
+
                 if self.stuck_timeout <= 0:
                     self.stuck_timeout = self.MAX_STUCK_TIME
                     break
+
                 yield
 
             self.tank.stop_moving()
@@ -179,19 +196,6 @@ class Ai:
 
         return new_path
 
-    class Node():
-        def __init__(self, tile, hcost, gcost, previous = None):
-            self.tile = tile
-            self.hcost = hcost
-            self.gcost = gcost
-            self.fcost = hcost + gcost
-            self.previous = previous
-
-    def create_node(self, tile, origin, target, previous = None):
-        gcost = (target - tile).length
-        hcost = (origin - tile).length
-        return self.Node(tile, hcost, gcost, previous)
-
     def tile_not_visited(self, tile, open, closed):
         nodes = open + closed
         for node in nodes:
@@ -199,38 +203,37 @@ class Ai:
                 return False
         return True
 
-
-    def find_shortest_path(self, origin, target, include_metal):
+    def find_shortest_path(self, origin, target, include_metal_box):
         origin = get_tile_position(origin)
-        open = [self.create_node(origin, origin, target)]
+        open = [Node.create_node(origin, origin, target)]
         closed = []
+        out = deque([])
 
         while open:
             current = open[0]
+
             for node in open:
-                if (node.fcost < current.fcost or 
+                if (node.fcost < current.fcost or
                    (node.fcost == current.fcost and
-                    node.hcost < current.hcost)):
+                        node.hcost < current.hcost)):
                     current = node
+
             open.remove(current)
             closed.append(current)
 
             if current.tile == target:
-                out = deque()
-                while True:
-                    if current == None:
-                        break
+                while current is not None:
                     out.appendleft(current.tile)
                     current = current.previous
+
                 return out
-                
-            for neighbor in self.get_tile_neighbors(current.tile, include_metal):
+
+            for neighbor in self.get_tile_neighbors(
+                    current.tile, include_metal_box):
                 if self.tile_not_visited(neighbor, open, closed):
-                    open.append(self.create_node(neighbor, origin, target, current))
-        return deque([])
-
-
-
+                    open.append(Node.create_node(
+                        neighbor, origin, target, current))
+        return out
 
     def update_box_pos(self):
         self.updated_boxes = [[0 for _ in range(self.current_map.width)]

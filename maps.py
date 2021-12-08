@@ -1,5 +1,5 @@
-from config import (MAP_PATH, MAP_START_POS_REF,
-                    MAP_BOXES_REF, MAP_FLAG_POS_REF)
+from config import (MAP_PATH, JSON_START_POS_REF,
+                    JSON_BOXES_REF, JSON_FLAG_POS_REF)
 import os
 import json
 import pickle
@@ -31,7 +31,7 @@ class CTFMap:
         return self.boxes[y][x]
 
     @staticmethod
-    def create(boxes, start_positions, flag_position):
+    def create_map(boxes, start_positions, flag_position):
         map_width = len(boxes[0])
         map_height = len(boxes)
         return CTFMap(
@@ -78,7 +78,7 @@ class CTFMap:
         ctfmap_object = pickle.load(map_file)
         CTFMap.check_txt_file(ctfmap_object)
 
-        return CTFMap.create(
+        return CTFMap.create_map(
             ctfmap_object.boxes, ctfmap_object.start_positions, ctfmap_object.
             flag_position)
 
@@ -88,10 +88,10 @@ class CTFMap:
         json_obj = json.load(map_file)
         CTFMap.check_json_file(json_obj)
 
-        return CTFMap.create(
-            json_obj[MAP_BOXES_REF],
-            json_obj[MAP_START_POS_REF],
-            json_obj[MAP_FLAG_POS_REF])
+        return CTFMap.create_map(
+            json_obj[JSON_BOXES_REF],
+            json_obj[JSON_START_POS_REF],
+            json_obj[JSON_FLAG_POS_REF])
 
     @staticmethod
     def check_txt_file(map_obj):
@@ -105,14 +105,14 @@ class CTFMap:
     @staticmethod
     def check_json_file(json_obj):
         """ Checks if json map file is correct. """
-        for setting in (MAP_BOXES_REF, MAP_START_POS_REF, MAP_FLAG_POS_REF):
+        for setting in (JSON_BOXES_REF, JSON_START_POS_REF, JSON_FLAG_POS_REF):
             assert setting in json_obj.keys(
             ), f"Setting {setting} is not defined in json map file."
 
         CTFMap.check_map_obj(
-            json_obj[MAP_BOXES_REF],
-            json_obj[MAP_START_POS_REF],
-            json_obj[MAP_FLAG_POS_REF])
+            json_obj[JSON_BOXES_REF],
+            json_obj[JSON_START_POS_REF],
+            json_obj[JSON_FLAG_POS_REF])
 
 
 if __name__ == "__main__":
@@ -163,6 +163,6 @@ if __name__ == "__main__":
                   [[0.5, 2.5, 270], [9.5, 2.5, 90]], [5, 2.5])
 
     # Serialize all map objects to txt files.
-    for i in range(3):
+    for i, ctfmap in enumerate((map0, map1, map2)):
         with open(f"./map_files/map{i}.txt", "wb") as file:
-            pickle.dump(repr(f"map{i}"), file)
+            pickle.dump(ctfmap, file)

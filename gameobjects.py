@@ -151,8 +151,8 @@ class Tank(GamePhysicsObject):
         bullet_vec = self.get_pos() + offset_vector
         orientation = tank_angle
 
-        Bullet.create(game_objects, bullet_vec, orientation,
-                      self.bullet_max_speed, self.space)
+        Bullet.create_bullet(game_objects, bullet_vec, orientation,
+                             self.bullet_max_speed, self.space)
 
     def get_shot(self):
         """ Reduces hitpoints if the tank has no protection. """
@@ -167,7 +167,7 @@ class Tank(GamePhysicsObject):
         if self.hit_points > 0:
             return False
 
-        Explosion.create(self.get_pos(), game_objects, self.clock)
+        Explosion.create_explosion(self.get_pos(), game_objects, self.clock)
 
         self.hit_points = self.max_hit_points
         self.shoot_cooldown = 0
@@ -233,7 +233,7 @@ class Bullet(GamePhysicsObject):
         return self.body.angle
 
     @ staticmethod
-    def create(game_objects, pos_vec, orientation, speed, space):
+    def create_bullet(game_objects, pos_vec, orientation, speed, space):
         game_objects.append(
             Bullet(*pos_vec, orientation, speed, CTFImages.bullet, space))
 
@@ -312,6 +312,6 @@ class Explosion(GameVisibleObject):
             self.game_objects.remove(self)
 
     @ staticmethod
-    def create(pos_vec, game_objects, clock):
+    def create_explosion(pos_vec, game_objects, clock):
         game_objects.append(Explosion(
             *pos_vec, CTFImages.explosion, game_objects, clock))

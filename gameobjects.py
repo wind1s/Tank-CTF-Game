@@ -11,14 +11,16 @@ class Tank(GamePhysicsObject):
     """ Extends GamePhysicsObject and handles aspects which are specific to our tanks. """
 
     COLLISION_TYPE = 2
-    ACCELERATION = 0.6
+    ACCELERATION = 1
     NORMAL_MAX_SPEED = 2.5
-    FLAG_MAX_SPEED = NORMAL_MAX_SPEED * 0.5
+    FLAG_SPEED_REDUCTION = 0.7
     HIT_POINTS = 3
-    SHOOT_COOLDOWN_MS = seconds_to_ms(0.5)
+    SHOOT_COOLDOWN_MS = seconds_to_ms(0.8)
     SPAWN_PROTECTION_MS = seconds_to_ms(3)
 
-    def __init__(self, x, y, orientation, sprite, space, hit_points, clock):
+    def __init__(
+            self, name, x, y, orientation, sprite, space, clock, hit_points,
+            speed):
         super().__init__(x, y, orientation, sprite, space, True)
 
         self.acceleration = 0  # 1 forward, 0 for stand still, -1 for backwards
@@ -26,22 +28,22 @@ class Tank(GamePhysicsObject):
         self.body.angular_velocity = 0
         self.space = space
         self.clock = clock
+        self.shape.collision_type = self.COLLISION_TYPE
 
         # This variable is used to access the flag object, if the current tank is carrying the flag
         self.flag = None
-        self.max_speed = Tank.NORMAL_MAX_SPEED
+        self.max_speed = speed
         self.bullet_max_speed = Bullet.MAX_SPEED
 
         # Define the start position, which is also the position where the tank has to return with the flag
         self.start_position = pym.Vec2d(x, y)
         self.start_orientation = orientation
 
-        self.shape.collision_type = Tank.COLLISION_TYPE
         self.shoot_cooldown = 0
-        self.protection_time = seconds_to_ms(1.5)  # Time in ms
-
+        self.protection_time = self.SPAWN_PROTECTION_MS  # Time in ms
         self.max_hit_points = hit_points
         self.hit_points = hit_points
+        self.name = name
 
     def accelerate(self):
         """ Call this function to make the tank move forward. """
@@ -98,9 +100,6 @@ class Tank(GamePhysicsObject):
             self.flag.target_base = self.start_position
             self.flag.x, self.flag.y = self.get_pos()
             self.flag.orientation = -math.degrees(self.get_angle())
-        # Else ensure that the tank has its normal max speed
-        else:
-            self.max_speed = Tank.NORMAL_MAX_SPEED
 
     def update_timers(self):
         # Reduce timers by time this tick took.
@@ -123,7 +122,7 @@ class Tank(GamePhysicsObject):
                 # Grab the flag !
                 self.flag = flag
                 flag.is_on_tank = True
-                self.max_speed = Tank.FLAG_MAX_SPEED
+                self.max_speed *= self.FLAG_SPEED_REDUCTION
 
     def try_drop_flag(self):
         """ If tank has the flag, drop it."""
@@ -132,6 +131,7 @@ class Tank(GamePhysicsObject):
                 self.get_pos()) + pym.Vec2d(0.5, 0.5)
             self.flag.is_on_tank = False
             self.flag = None
+            self.max_speed /= self.FLAG_SPEED_REDUCTION
 
     def has_won(self):
         """ Check if the current tank has won (if it is has the flag and it is close to its start position). """
@@ -152,8 +152,8 @@ class Tank(GamePhysicsObject):
         bullet_vec = self.get_pos() + offset_vector
         orientation = tank_angle
 
-        Bullet.create(game_objects, self, bullet_vec, orientation,
-                      self.bullet_max_speed, self.space)
+        Bullet.create_bullet(game_objects, bullet_vec, orientation,
+                             self.bullet_max_speed, self.space)
 
     def get_shot(self):
         """ Reduces hitpoints if the tank has no protection. """
@@ -168,7 +168,7 @@ class Tank(GamePhysicsObject):
         if self.hit_points > 0:
             return False
 
-        Explosion.create(self.get_pos(), game_objects, self.clock)
+        Explosion.create_explosion(self.get_pos(), game_objects, self.clock)
 
         self.hit_points = self.max_hit_points
         self.shoot_cooldown = 0
@@ -204,10 +204,9 @@ class Bullet(GamePhysicsObject):
     COLLISION_TYPE = 1
     MAX_SPEED = 4
 
-    def __init__(self, tank, x, y, orientation, speed, sprite, space):
+    def __init__(self, x, y, orientation, speed, sprite, space):
         super().__init__(x, y, orientation, sprite, space, True)
 
-        self.tank = tank
         self.speed = speed
         self.start_position = pym.Vec2d(x, y)
         self.body.angle = orientation
@@ -234,11 +233,10 @@ class Bullet(GamePhysicsObject):
     def get_angle(self):
         return self.body.angle
 
-    @staticmethod
-    def create(game_objects, tank, pos_vec, orientation, speed, space):
+    @ staticmethod
+    def create_bullet(game_objects, pos_vec, orientation, speed, space):
         game_objects.append(
-            Bullet(
-                tank, *pos_vec, orientation, speed, CTFImages.bullet, space))
+            Bullet(*pos_vec, orientation, speed, CTFImages.bullet, space))
 
 
 class Box(GamePhysicsObject):
@@ -264,7 +262,7 @@ class Box(GamePhysicsObject):
     def get_angle(self):
         return self.body.angle
 
-    @staticmethod
+    @ staticmethod
     def get_box_with_type(x, y, box_type, space):
         """ Creates a box instance with specified type. """
         # Offsets the coordinate to the center of the tile
@@ -318,7 +316,7 @@ class Explosion(GameVisibleObject):
         else:
             self.game_objects.remove(self)
 
-    @staticmethod
-    def create(pos_vec, game_objects, clock):
+    @ staticmethod
+    def create_explosion(pos_vec, game_objects, clock):
         game_objects.append(Explosion(
             *pos_vec, CTFImages.explosion, game_objects, clock))

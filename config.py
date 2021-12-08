@@ -12,6 +12,18 @@ MAP_PATH = join(split(abspath(__file__))[0], "map_files")
 SOUNDS_PATH = join(split(abspath(__file__))[0], "sound_files")
 IMAGES_PATH = join(split(abspath(__file__))[0], "image_files")
 
-MAP_BOXES_REF = "boxes"
-MAP_START_POS_REF = "start_positions"
-MAP_FLAG_POS_REF = "flag_position"
+JSON_BOXES_REF = "boxes"
+JSON_START_POS_REF = "start_positions"
+JSON_FLAG_POS_REF = "flag_position"
+
+
+TERMINAL_DISPLAY_TITLE = """
+   _____            _                    _______ _            ______ _             
+  / ____|          | |                  |__   __| |          |  ____| |            
+ | |     __ _ _ __ | |_ _   _ _ __ ___     | |  | |__   ___  | |__  | | __ _  __ _ 
+ | |    / _` | '_ \| __| | | | '__/ _ \    | |  | '_ \ / _ \ |  __| | |/ _` |/ _` |
+ | |___| (_| | |_) | |_| |_| | | |  __/    | |  | | | |  __/ | |    | | (_| | (_| |
+  \_____\__,_| .__/ \__|\__,_|_|  \___|    |_|  |_| |_|\___| |_|    |_|\__,_|\__, |
+             | |                                                              __/ |
+             |_|                                                             |___/ 
+"""

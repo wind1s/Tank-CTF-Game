@@ -72,5 +72,7 @@ class CollisionHandler():
             box.hit_points -= 1
 
             if box.hit_points <= 0:
-                Explosion.create(box.get_pos(), self.game_objects, self.clock)
+                Explosion.create_explosion(
+                    box.get_pos(),
+                    self.game_objects, self.clock)
                 self.remove_object(box, box_shape)

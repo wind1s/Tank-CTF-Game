@@ -16,10 +16,11 @@ from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE,
 class CTFGame:
     """ Main game class. Handles all major functionality. """
 
-    def __init__(self, game_mode, game_map):
+    def __init__(self, game_mode, game_map, score_board=dict()):
         self.running = True
         self.game_mode = game_mode
         self.current_map = game_map
+
         # Initialise the clock
         self.clock = pyg.time.Clock()
 
@@ -37,29 +38,35 @@ class CTFGame:
         self.skip_update = 0
 
         # Create game objects.
-        boxes = cobj.create_boxes(self.current_map, self.space)
-        tanks = cobj.create_tanks(self.current_map, self.space, self.clock)
-        bases = cobj.create_bases(self.current_map)
+        self.boxes = cobj.create_boxes(self.current_map, self.space)
+        self.tanks = cobj.create_tanks(
+            self.current_map, self.space, self.clock)
+        self.bases = cobj.create_bases(self.current_map)
         self.flag = cobj.create_flag(self.current_map)
 
-        self.game_objects = boxes + tanks + [self.flag] + bases
+        self.game_objects = self.boxes + self.tanks + [self.flag] + self.bases
 
         # Create ai's.
         self.ai_objects = cobj.create_ai(
-            tanks[1:],
+            self.tanks[1:],
             self.game_objects, self.space, self.current_map, self.clock)
+        # Setup score board.
+        self.score_board = score_board
+
+        if not score_board:
+            self.score_board = {tank.name: 0 for tank in self.tanks}
 
         # Set game mode.
         self.player1_tank = None
         self.player2_tank = None
 
         def set_singleplayer():
-            self.player1_tank = tanks[0]
+            self.player1_tank = self.tanks[0]
 
         def set_hot_multiplayer():
             self.ai_objects.remove(self.ai_objects[-1])
-            self.player1_tank = tanks[0]
-            self.player2_tank = tanks[-1]
+            self.player1_tank = self.tanks[0]
+            self.player2_tank = self.tanks[-1]
 
         def set_co_op():
             assert False, "co-op not implemented!"
@@ -83,7 +90,7 @@ class CTFGame:
         self.running = False
 
     def restart(self):
-        self.__init__(self.game_mode, self.current_map)
+        self.__init__(self.game_mode, self.current_map, self.score_board)
 
     def run_loop(self):
         """ Main game loop. """
@@ -135,7 +142,10 @@ class CTFGame:
 
                 if obj.has_won():
                     CTFSounds.victory.play()
-                    print(f"Tank has won!")
+                    print(f"{obj.name} has won!")
+                    self.score_board[obj.name] += 1
+
+                    self.print_score_board()
                     self.restart()
 
             obj.post_update()
@@ -149,3 +159,8 @@ class CTFGame:
         """ Updated the next decision of ai's. """
         for ai_obj in self.ai_objects:
             ai_obj.decide()
+
+    def print_score_board(self):
+        print("Score board:")
+        for key, val in self.score_board.items():
+            print(key, " - ", val, sep="")

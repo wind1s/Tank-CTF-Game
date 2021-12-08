@@ -121,25 +121,16 @@ class Ai:
         while True:
             self.update_box_pos()
 
-            path = self.find_shortest_path(
-                self.tank.get_pos(),
-                self.get_target_tile(),
-                False)
-
-            if not path:
-                path = self.find_shortest_path(
-                    self.tank.get_pos(),
-                    self.get_target_tile(),
-                    True)
+            path = self.get_path()
 
             if not path:
                 yield
                 continue  # Start from the top of our cycle
-
+            
             path = self.shorten_path(path)
             path.popleft()
 
-            next_coord = path.popleft() + pym.Vec2d(0.5, 0.5)
+            next_coord = path.popleft()
             yield
 
             self.turn(next_coord)
@@ -162,8 +153,9 @@ class Ai:
 
             self.tank.stop_moving()
 
+
     def shorten_path(self, path):
-        """ Shortens the path generated from a BFS search."""
+        """ Shortens the path generated from an A* search."""
         new_path = deque()
 
         def path_tile_is_turn(i):
@@ -196,8 +188,14 @@ class Ai:
                 return False
         return True
 
+    def find_prio_path(self, origin, target):
+        path = self.find_shortest_path(origin, target, False)
+        if not path:
+            path = self.find_shortest_path(origin, target, True)
+        return path
 
     def find_shortest_path(self, origin, target, include_metal):
+        target_tile = get_tile_position(target)
         origin = get_tile_position(origin)
         open = [self.create_node(origin, origin, target)]
         closed = []
@@ -212,12 +210,13 @@ class Ai:
             open.remove(current)
             closed.append(current)
 
-            if current.tile == target:
+            if current.tile == target_tile:
                 out = deque()
+                current.tile = target - pym.Vec2d(0.5, 0.5)
                 while True:
                     if current == None:
                         break
-                    out.appendleft(current.tile)
+                    out.appendleft(current.tile + pym.Vec2d(0.5, 0.5))
                     current = current.previous
                 return out
                 
@@ -225,8 +224,6 @@ class Ai:
                 if self.tile_not_visited(neighbor, open, closed):
                     open.append(self.create_node(neighbor, origin, target, current))
         return deque([])
-
-
 
 
     def update_box_pos(self):
@@ -238,15 +235,28 @@ class Ai:
                 tile_x, tile_y = get_tile_position(obj.get_pos())
                 self.updated_boxes[tile_y][tile_x] = obj.box_type
 
-    def get_target_tile(self):
-        """ Returns position of the flag if we don't have it. If we do have the flag,
-            return the position of our home base.
-        """
-        if self.tank.flag is not None:
-            return get_tile_position(self.tank.start_position)
+    def find_intercept_path(self):
+        self.get_flag()
+        flag_path = self.find_prio_path(self.flag.get_pos(),
+                                        self.flag.target_base)
+        for coord in flag_path:
+            if get_tile_position(self.tank.get_pos()) == get_tile_position(coord):
+                return self.find_prio_path(self.tank.get_pos(), self.flag.get_pos())
+        intercept_point = flag_path[len(flag_path) // 2]
+        return self.find_prio_path(self.tank.get_pos(), intercept_point)
 
-        self.get_flag()  # Ensure that we have initialized it.
-        return get_tile_position((self.flag.x, self.flag.y))
+    def get_path(self):
+        """ Finds target path. Goes to flag if on ground, intecepts tank 
+        with flag if picked up. Goes to base if we have flag.
+        """
+        self.get_flag()
+        if self.tank.flag is None:
+            if self.flag.is_on_tank:
+                return self.find_intercept_path()
+            return self.find_prio_path(self.tank.get_pos(), self.flag.get_pos())
+
+        return self.find_prio_path(self.tank.get_pos(),
+                                   self.tank.start_position)
 
     def get_flag(self):
         """ This has to be called to get the flag, since we don't know

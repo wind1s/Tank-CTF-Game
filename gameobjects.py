@@ -95,6 +95,7 @@ class Tank(GamePhysicsObject):
         self.update_timers()
 
         if self.flag != None:
+            self.flag.target_base = self.start_position
             self.flag.x, self.flag.y = self.get_pos()
             self.flag.orientation = -math.degrees(self.get_angle())
         # Else ensure that the tank has its normal max speed
@@ -287,7 +288,11 @@ class Flag(GameVisibleObject):
 
     def __init__(self, x, y):
         self.is_on_tank = False
+        self.target_base = pym.Vec2d(0, 0)
         super().__init__(x, y, CTFImages.flag)
+
+    def get_pos(self):
+        return pym.Vec2d(self.x, self.y)
 
 
 class Base(GameVisibleObject):

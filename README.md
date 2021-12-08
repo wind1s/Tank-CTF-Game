@@ -17,7 +17,7 @@ Multiplayer:
     Player 2 moves with the WASD keys and shoots with X.
 
 Map loader:
-    Maps can be loaded from text files
+    Maps can be loaded from text files.
 
 Hit Points:
     Tanks have 3HP by default, wood crates have 2HP.
@@ -28,11 +28,17 @@ Sound:
 Explosions:
     An explosion is displayed on bullet impact.
 
-Improved AI:
-    Ai prioritizes paths without metal boxes and recalculates when stuck. Also uses A* pathfinding.
+A* Search:
+    AI uses A* pathfinding.
+
+Improved AI: (WIP)
+    Ai prioritizes paths without metal boxes and recalculates when stuck. 
 
 Unfair AI:
-    When enabled, AI moves faster and is stronger
+    When enabled, AI moves faster and is stronger.
+
+Score Counting:
+    Upon capturing flag, winning player gets a point and game restarts.
     
 #### Future ideas
 
@@ -47,11 +53,8 @@ ctf.py
     Starts the game with flag arguments
 
 ctfgame.py
-    Class for entire game which creates holds all variables and game objects
-
-gameloop.py
-    The main loop of the game, runs functions every frames such as
-    checking player input and updating game objects and screen
+    Class for entire game which creates holds all variables and game objects.
+    Also runs game loop, which updates the game every frame.
 
 keyevent.py
     Handles user keyboard input

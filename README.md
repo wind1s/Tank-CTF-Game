@@ -31,8 +31,10 @@ Explosions:
 A* Search:
     AI uses A* pathfinding.
 
-Improved AI: (WIP)
-    Ai prioritizes paths without metal boxes and recalculates when stuck. 
+Improved AI:
+    AI prioritizes paths without metal boxes and recalculates when stuck. 
+    AI has an updated map with boxes in the right spot. AI also tries to intercept
+    the path between player carrying flag and their base.
 
 Unfair AI:
     When enabled, AI moves faster and is stronger.

@@ -13,8 +13,8 @@ class CTFSounds():
     def __init__(self):
         pyg.mixer.init()
 
-        CTFSounds.victory = self.load_sound("wood_breaking.wav")
-        CTFSounds.shooting = self.load_sound("wood_breaking.wav")
+        CTFSounds.victory = self.load_sound("victory.wav")
+        CTFSounds.shooting = self.load_sound("shoot.wav")
         CTFSounds.wood_breaking = self.load_sound("wood_breaking.wav")
         CTFSounds.explosion = self.load_sound("wood_breaking.wav")
         CTFSounds.background = self.load_sound("wood_breaking.wav")

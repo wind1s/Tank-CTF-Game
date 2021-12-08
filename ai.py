@@ -15,7 +15,7 @@ class Ai:
     boxes.
     """
 
-    MIN_ANGLE_DIF = math.radians(2)
+    MIN_ANGLE_DIF = math.radians(1.5)
     MIN_POS_DIFF = 0.1
     MAX_STUCK_TIME = seconds_to_ms(1.5)
 

@@ -36,8 +36,8 @@ def create_tanks(current_map, space, clock):
     n_tanks = len(current_map.start_positions)
     pos = current_map.start_positions
 
-    return [Tank(pos[i][0], pos[i][1], pos[i][2], CTFImages.tank_images[i],
-                 space, Tank.HIT_POINTS, clock) for i in range(n_tanks)]
+    return [Tank(f"player {i+1}", pos[i][0], pos[i][1], pos[i][2], CTFImages.tank_images[i],
+                 space, clock, Tank.HIT_POINTS, Tank.NORMAL_MAX_SPEED) for i in range(n_tanks)]
 
 
 def create_bases(current_map):
@@ -70,4 +70,5 @@ def create_map_bounds(current_map, body):
 
 
 def create_ai(tanks, game_objects, space, current_map, clock):
+    """ Creates the ai object to control tanks. """
     return [Ai(tank, game_objects, space, current_map, clock) for tank in tanks]

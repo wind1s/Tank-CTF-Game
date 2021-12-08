@@ -17,16 +17,16 @@ class Ai:
 
     MIN_ANGLE_DIF = math.radians(2)
     MIN_POS_DIFF = 0.1
-    MAX_STUCK_TIME = seconds_to_ms(1.5)
+    MAX_STUCK_TIME = seconds_to_ms(1)
 
     def __init__(self, tank, game_objects, space, current_map, clock):
         self.space = space
         self.clock = clock
 
-        # Buff tanks.
-        tank.max_speed = tank.max_speed*1.3
-        tank.bullet_max_speed = tank.bullet_max_speed*1.2
         self.tank = tank
+        # Buff tanks
+        self.tank.max_speed *= 1.2
+        self.tank.bullet_max_speed *= 1.3
 
         self.flag = None
         self.game_objects = game_objects
@@ -83,7 +83,10 @@ class Ai:
         current_diff = periodic_difference_of_angles(
             self.tank.get_angle(), target_angle)
 
-        current_diff -= 2*math.pi if current_diff > math.pi else 0
+        if current_diff > math.pi:
+            current_diff -= 2*math.pi
+        elif current_diff < -math.pi:
+            current_diff += 2*math.pi
 
         if current_diff > 0:
             self.tank.turn_left()

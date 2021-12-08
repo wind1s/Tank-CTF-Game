@@ -48,7 +48,7 @@ AI uses A* path finding instead of BFS when computing the shortest path to the f
 ##### AI Improvements:
 AI currently reads a updated map each time when finding a new path.
 The Flag is always dropped in the middle of a tile so the AI will can always pick it up.
-AI now more easily can navigate around metal boxes (see custom feature Improved AI)
+AI now more easily can navigate around metal boxes (see custom feature Improved AI).
 When another tank has the flag, the ai tries to intercept its path instead of going straight for the flag.
 
 ### Custom features

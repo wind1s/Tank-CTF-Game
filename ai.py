@@ -150,9 +150,8 @@ class Ai:
                 continue  # Start from the top of our cycle
 
             path = self.shorten_path(path)
-            path.popleft()
 
-            next_coord = path.popleft()
+            next_coord = path.popleft() + pym.Vec2d(0.5, 0.5)
             yield
 
             self.turn(next_coord)
@@ -189,14 +188,11 @@ class Ai:
 
     def shorten_path(self, path):
         """ Shortens the path generated from an A* search."""
-        new_path = deque()
-
         def path_tile_is_turn(i):
             return path[i-1].x != path[i+1].x and path[i-1].y != path[i+1].y
 
-        new_path.append(path[0])
-        new_path.extend([path[i] for i in range(
-            1, len(path) - 1) if path_tile_is_turn(i)])
+        new_path = deque(list_comp(range(
+            1, len(path) - 1), func=lambda i: path[i], pred=path_tile_is_turn))
         new_path.append(path[-1])
 
         return new_path
@@ -210,19 +206,15 @@ class Ai:
         return path
 
     def find_shortest_path(self, origin, target, include_metal_box):
-        def tile_visited(tile, nodes):
-            for node in nodes:
-                if node.tile == tile:
-                    return True
-            return False
-
-        target_tile = get_tile_position(target)
+        """"""
+        target = get_tile_position(target)
         origin = get_tile_position(origin)
         open_nodes = [Node.create_node(origin, origin, target)]
         closed_nodes = []
+        visited = set([open_nodes[0].tile.int_tuple])
         out = deque([])
 
-        while open:
+        while open_nodes:
             current = open_nodes[0]
             for node in open_nodes:
                 if (node.fcost < current.fcost or
@@ -233,47 +225,57 @@ class Ai:
             open_nodes.remove(current)
             closed_nodes.append(current)
 
-            if current.tile == target_tile:
-                current.tile = target - pym.Vec2d(0.5, 0.5)
+            if current.tile == target:
+                current.tile = target
+
                 while current is not None:
-                    out.appendleft(current.tile + pym.Vec2d(0.5, 0.5))
+                    out.appendleft(current.tile)
                     current = current.previous
+
                 return out
 
             for neighbor in self.get_tile_neighbors(
                     current.tile, include_metal_box):
-                if not tile_visited(neighbor, open_nodes + closed_nodes):
+                if not neighbor in visited:
+                    visited.add(neighbor)
                     open_nodes.append(Node.create_node(
-                        neighbor, origin, target, current))
+                        pym.Vec2d(neighbor), origin, target, current))
 
         return out
 
     def find_intercept_path(self):
-        self.get_flag()
         flag_path = self.find_prio_path(self.flag.get_pos(),
                                         self.flag.target_base)
-        for coord in flag_path:
-            if get_tile_position(
-                    self.tank.get_pos()) == get_tile_position(coord):
-                return self.find_prio_path(
-                    self.tank.get_pos(),
-                    self.flag.get_pos())
-        intercept_point = flag_path[len(flag_path) // 2]
+        naive_path = self.find_prio_path(self.tank.get_pos(),
+                                         self.flag.target_base)
+
+        intercept_point = flag_path[len(flag_path)//2]
+
+        for coord1, coord2 in zip(flag_path, naive_path):
+            if coord1 == coord2:
+                intercept_point = coord1
+                print("intercept point", coord1)
+                break
+
         return self.find_prio_path(self.tank.get_pos(), intercept_point)
 
     def get_path(self):
-        """ Finds target path. Goes to flag if on ground, intecepts tank 
+        """ Finds target path. Goes to flag if on ground, intecepts tank
         with flag if picked up. Goes to base if we have flag.
         """
         self.get_flag()
+        tank_pos = self.tank.get_pos()
 
         if self.tank.flag is None:
+            initial_path = self.find_prio_path(tank_pos, self.flag.get_pos())
+
+            if len(initial_path) <= 3:
+                return initial_path
+
             if self.flag.is_on_tank:
                 return self.find_intercept_path()
 
-            return self.find_prio_path(
-                self.tank.get_pos(),
-                self.flag.get_pos())
+            return initial_path
 
         return self.find_prio_path(self.tank.get_pos(),
                                    self.tank.start_position)
@@ -307,7 +309,8 @@ class Ai:
         def tile_pred(coord):
             return self.filter_tile_neighbors(coord, include_metal_box)
 
-        return list_comp(neighbors, pred=tile_pred)
+        return list_comp(
+            neighbors, func=lambda vec: vec.int_tuple, pred=tile_pred)
 
     def filter_tile_neighbors(self, coord, include_metal_box):
         x_in_bounds = coord.x >= 0 and coord.x <= self.MAX_X

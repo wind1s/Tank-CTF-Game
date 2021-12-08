@@ -16,7 +16,7 @@ class Tank(GamePhysicsObject):
     FLAG_SPEED_REDUCTION = 0.7
     HIT_POINTS = 3
     SHOOT_COOLDOWN_MS = seconds_to_ms(0.8)
-    SPAWN_PROTECTION_MS = seconds_to_ms(3)
+    SPAWN_PROTECTION_MS = seconds_to_ms(2)
 
     def __init__(
             self, name, x, y, orientation, sprite, space, clock, hit_points,

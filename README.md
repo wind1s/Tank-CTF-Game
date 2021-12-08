@@ -16,6 +16,9 @@ Multiplayer:
     Player 1 moves with the arrow keys and shoots with spacebar.
     Player 2 moves with the WASD keys and shoots with X.
 
+Map loader:
+    Maps can be loaded from text files
+
 Hit Points:
     Tanks have 3HP by default, wood crates have 2HP.
 
@@ -24,6 +27,12 @@ Sound:
 
 Explosions:
     An explosion is displayed on bullet impact.
+
+Improved AI:
+    Ai prioritizes paths without metal boxes and recalculates when stuck. Also uses A* pathfinding.
+
+Unfair AI:
+    When enabled, AI moves faster and is stronger
     
 #### Future ideas
 
@@ -31,8 +40,14 @@ Game options, change key layout, ajust sound, cheat codes etc.
 Add knockback to tanks.
 
 ## Files
+cmdparser.py
+    Reads flags when starting game
+
 ctf.py
-    Starts the game by running main_loop with flag arguments
+    Starts the game with flag arguments
+
+ctfgame.py
+    Class for entire game which creates holds all variables and game objects
 
 gameloop.py
     The main loop of the game, runs functions every frames such as
@@ -43,12 +58,6 @@ keyevent.py
 
 collision.py
     Functions for collision handling
-
-ctfgame.py
-    Sets important variables at the start of the game
-
-initdisplay.py
-    Creates a new PyGame display
 
 baseobject.py
     Base classes for game objects
@@ -63,7 +72,7 @@ ai.py
     Class which controls AI tanks
 
 maps.py
-    Class for maps, and a few default maps.
+    Reads and loads maps from map files
 
 images.py
     Loads image files to be used in game

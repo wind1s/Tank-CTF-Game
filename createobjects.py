@@ -3,6 +3,7 @@ import pymunk as pym
 from gameobjects import (Tank, Base, Flag, Box)
 from images import CTFImages
 from ai import Ai
+from config import PLAYER_NAMES
 
 
 def create_grass_background(current_map, screen):
@@ -36,7 +37,7 @@ def create_tanks(current_map, space, clock):
     n_tanks = len(current_map.start_positions)
     pos = current_map.start_positions
 
-    return [Tank(f"player {i+1}", pos[i][0], pos[i][1], pos[i][2], CTFImages.tank_images[i],
+    return [Tank(PLAYER_NAMES[i], pos[i][0], pos[i][1], pos[i][2], CTFImages.tank_images[i],
                  space, clock, Tank.HIT_POINTS, Tank.NORMAL_MAX_SPEED) for i in range(n_tanks)]
 
 

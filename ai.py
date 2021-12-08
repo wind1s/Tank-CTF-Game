@@ -30,7 +30,7 @@ class Ai:
     boxes.
     """
 
-    MIN_ANGLE_DIF = math.radians(2)
+    MIN_ANGLE_DIF = math.radians(1.5)
     MIN_POS_DIFF = 0.1
     MAX_STUCK_TIME = seconds_to_ms(1)
 
@@ -38,10 +38,10 @@ class Ai:
         self.space = space
         self.clock = clock
 
+        # Buff tanks.
+        tank.max_speed = tank.max_speed*1.3
+        tank.bullet_max_speed = tank.bullet_max_speed*1.2
         self.tank = tank
-        # Buff tanks
-        self.tank.max_speed *= 1.2
-        self.tank.bullet_max_speed *= 1.3
 
         self.flag = None
         self.game_objects = game_objects
@@ -143,16 +143,7 @@ class Ai:
         while True:
             self.update_box_pos()
 
-            path = self.find_shortest_path(
-                self.tank.get_pos(),
-                self.get_target_tile(),
-                False)
-
-            if not path:
-                path = self.find_shortest_path(
-                    self.tank.get_pos(),
-                    self.get_target_tile(),
-                    True)
+            path = self.get_path()
 
             if not path:
                 yield
@@ -161,7 +152,7 @@ class Ai:
             path = self.shorten_path(path)
             path.popleft()
 
-            next_coord = path.popleft() + pym.Vec2d(0.5, 0.5)
+            next_coord = path.popleft()
             yield
 
             self.turn(next_coord)
@@ -177,11 +168,9 @@ class Ai:
             while not self.correct_pos(next_coord):
                 self.stuck_timeout = reduce_until_zero(
                     self.stuck_timeout, self.clock.get_time())
-
                 if self.stuck_timeout <= 0:
                     self.stuck_timeout = self.MAX_STUCK_TIME
                     break
-
                 yield
 
             self.tank.stop_moving()
@@ -199,7 +188,7 @@ class Ai:
                 self.updated_boxes[tile_y][tile_x] = obj.box_type
 
     def shorten_path(self, path):
-        """ Shortens the path generated from a BFS search."""
+        """ Shortens the path generated from an A* search."""
         new_path = deque()
 
         def path_tile_is_turn(i):
@@ -212,6 +201,14 @@ class Ai:
 
         return new_path
 
+    def find_prio_path(self, origin, target):
+        path = self.find_shortest_path(origin, target, False)
+
+        if not path:
+            path = self.find_shortest_path(origin, target, True)
+
+        return path
+
     def find_shortest_path(self, origin, target, include_metal_box):
         def tile_visited(tile, nodes):
             for node in nodes:
@@ -219,6 +216,7 @@ class Ai:
                     return True
             return False
 
+        target_tile = get_tile_position(target)
         origin = get_tile_position(origin)
         open_nodes = [Node.create_node(origin, origin, target)]
         closed_nodes = []
@@ -226,7 +224,6 @@ class Ai:
 
         while open:
             current = open_nodes[0]
-
             for node in open_nodes:
                 if (node.fcost < current.fcost or
                    (node.fcost == current.fcost and
@@ -236,11 +233,11 @@ class Ai:
             open_nodes.remove(current)
             closed_nodes.append(current)
 
-            if current.tile == target:
+            if current.tile == target_tile:
+                current.tile = target - pym.Vec2d(0.5, 0.5)
                 while current is not None:
-                    out.appendleft(current.tile)
+                    out.appendleft(current.tile + pym.Vec2d(0.5, 0.5))
                     current = current.previous
-
                 return out
 
             for neighbor in self.get_tile_neighbors(
@@ -251,15 +248,35 @@ class Ai:
 
         return out
 
-    def get_target_tile(self):
-        """ Returns position of the flag if we don't have it. If we do have the flag,
-            return the position of our home base.
-        """
-        if self.tank.flag is not None:
-            return get_tile_position(self.tank.start_position)
+    def find_intercept_path(self):
+        self.get_flag()
+        flag_path = self.find_prio_path(self.flag.get_pos(),
+                                        self.flag.target_base)
+        for coord in flag_path:
+            if get_tile_position(
+                    self.tank.get_pos()) == get_tile_position(coord):
+                return self.find_prio_path(
+                    self.tank.get_pos(),
+                    self.flag.get_pos())
+        intercept_point = flag_path[len(flag_path) // 2]
+        return self.find_prio_path(self.tank.get_pos(), intercept_point)
 
-        self.get_flag()  # Ensure that we have initialized it.
-        return get_tile_position((self.flag.x, self.flag.y))
+    def get_path(self):
+        """ Finds target path. Goes to flag if on ground, intecepts tank 
+        with flag if picked up. Goes to base if we have flag.
+        """
+        self.get_flag()
+
+        if self.tank.flag is None:
+            if self.flag.is_on_tank:
+                return self.find_intercept_path()
+
+            return self.find_prio_path(
+                self.tank.get_pos(),
+                self.flag.get_pos())
+
+        return self.find_prio_path(self.tank.get_pos(),
+                                   self.tank.start_position)
 
     def get_flag(self):
         """ This has to be called to get the flag, since we don't know

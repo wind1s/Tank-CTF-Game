@@ -16,10 +16,14 @@ arguments = parse_game_cmd_args()
 pyg.init()
 pyg.display.set_mode()
 
+# Load map and get the number of players.
+game_map = CTFMap.load_map(arguments.map)
+
 # Init the game sounds and images.
-CTFImages()
+CTFImages(game_map.n_players)
 CTFSounds()
 CTFSounds.background.play()
 
-game = CTFGame(arguments.game_mode, CTFMap.load_map(arguments.map))
+# Init game and run game loop.
+game = CTFGame(arguments.game_mode, game_map, {})
 game.run_loop()

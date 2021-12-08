@@ -1,7 +1,7 @@
 import math
 import pymunk as pym
 from utility import (reduce_until_zero, seconds_to_ms,
-                     clamp, get_tile_position)
+                     clamp, get_tile_position, add_object)
 from baseobjects import (GamePhysicsObject, GameVisibleObject)
 from sounds import CTFSounds
 from images import CTFImages
@@ -34,6 +34,7 @@ class Tank(GamePhysicsObject):
         self.flag = None
         self.max_speed = speed
         self.bullet_max_speed = Bullet.MAX_SPEED
+        assert self.max_speed < self.bullet_max_speed, "Tank speed greater than bullet speed! Possible to drive into own bullets."
 
         # Define the start position, which is also the position where the tank has to return with the flag
         self.start_position = pym.Vec2d(x, y)
@@ -142,17 +143,15 @@ class Tank(GamePhysicsObject):
         if self.shoot_cooldown > 0:
             return
 
-        CTFSounds.shooting.play()
-
         self.shoot_cooldown = self.SHOOT_COOLDOWN_MS
         tank_angle = self.get_angle()
-
         offset_vector = pym.Vec2d(0, 0.5).rotated(tank_angle)
         bullet_vec = self.get_pos() + offset_vector
-        orientation = tank_angle
 
-        Bullet.create_bullet(game_objects, bullet_vec, orientation,
-                             self.bullet_max_speed, self.space)
+        add_object(game_objects, Bullet.create_bullet(
+            *bullet_vec, tank_angle, self.bullet_max_speed, self.space))
+
+        CTFSounds.shooting.play()
 
     def get_shot(self):
         """ Reduces hitpoints if the tank has no protection. """
@@ -167,7 +166,8 @@ class Tank(GamePhysicsObject):
         if self.hit_points > 0:
             return False
 
-        Explosion.create_explosion(self.get_pos(), game_objects, self.clock)
+        add_object(game_objects, Explosion.create_explosion(
+            *self.get_pos(), game_objects, self.clock))
 
         self.hit_points = self.max_hit_points
         self.shoot_cooldown = 0
@@ -232,10 +232,9 @@ class Bullet(GamePhysicsObject):
     def get_angle(self):
         return self.body.angle
 
-    @ staticmethod
-    def create_bullet(game_objects, pos_vec, orientation, speed, space):
-        game_objects.append(
-            Bullet(*pos_vec, orientation, speed, CTFImages.bullet, space))
+    @staticmethod
+    def create_bullet(x, y, orientation, speed, space):
+        return Bullet(x, y, orientation, speed, CTFImages.bullet, space)
 
 
 class Box(GamePhysicsObject):
@@ -261,8 +260,8 @@ class Box(GamePhysicsObject):
     def get_angle(self):
         return self.body.angle
 
-    @ staticmethod
-    def get_box_with_type(x, y, box_type, space):
+    @staticmethod
+    def create_box(x, y, box_type, space):
         """ Creates a box instance with specified type. """
         # Offsets the coordinate to the center of the tile
         (x, y) = (x + 0.5, y + 0.5)
@@ -271,11 +270,11 @@ class Box(GamePhysicsObject):
             return Box(
                 x, y, CTFImages.rockbox, False, space, False, Box.ROCKBOX_TYPE)
 
-        elif box_type == Box.WOODBOX_TYPE:  # Creates a movable destructable woodbox
+        if box_type == Box.WOODBOX_TYPE:  # Creates a movable destructable woodbox
             return Box(
                 x, y, CTFImages.woodbox, True, space, True, Box.WOODBOX_TYPE)
 
-        elif box_type == Box.METALBOX_TYPE:  # Creates a movable non-destructable metalbox
+        if box_type == Box.METALBOX_TYPE:  # Creates a movable non-destructable metalbox
             return Box(
                 x, y, CTFImages.metalbox, True, space, False, Box.METALBOX_TYPE)
 
@@ -283,14 +282,22 @@ class Box(GamePhysicsObject):
 class Flag(GameVisibleObject):
     """ This class extends GameVisibleObject for representing flags."""
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, sprite):
         self.is_on_tank = False
-        super().__init__(x, y, CTFImages.flag)
+        super().__init__(x, y, sprite)
+
+    @staticmethod
+    def create_flag(x, y):
+        return Flag(x, y, CTFImages.flag)
 
 
 class Base(GameVisibleObject):
     def __init__(self, x, y, sprite):
         super().__init__(x, y, sprite)
+
+    @staticmethod
+    def create_base(x, y, sprite):
+        return Base(x, y, sprite)
 
 
 class Explosion(GameVisibleObject):
@@ -306,12 +313,12 @@ class Explosion(GameVisibleObject):
     def update_explosion(self):
         """ Updates the explosion timer and removes it if timer expires. """
         # Reduce timers by time this tick took.
-        if self.explosion_time >= 0:
-            self.explosion_time -= self.clock.get_time()
-        else:
+        self.explosion_time = reduce_until_zero(
+            self.explosion_time, self.clock.get_time())
+
+        if self.explosion_time < 0:
             self.game_objects.remove(self)
 
-    @ staticmethod
-    def create_explosion(pos_vec, game_objects, clock):
-        game_objects.append(Explosion(
-            *pos_vec, CTFImages.explosion, game_objects, clock))
+    @staticmethod
+    def create_explosion(x, y, game_objects, clock):
+        return Explosion(x, y, CTFImages.explosion, game_objects, clock)

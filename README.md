@@ -43,17 +43,14 @@ Using the flag ```--map``` you can specify a ```.txt``` or ```.json``` file from
 
 ### Hard features
 ##### A star search:
-Ai uses A* path finding instead of BFS when computing the shortest path to the flag/base.
+AI uses A* path finding instead of BFS when computing the shortest path to the flag/base.
 
 ##### AI Improvements:
-WIP
-TODO: 
-Make the AI block tank with the flag instead of going the shortest path to the flag.
-
-Finished:
-Ai currently reads a updated map each time when finding a new path.
+AI currently reads a updated map each time when finding a new path.
 The Flag is always dropped in the middle of a tile so the AI will can always pick it up.
 AI now more easily can navigate around metal boxes (see custom feature Improved AI)
+
+WIP: When another tank has the flag, the ai tries to intercept its path instead of going straight for the flag.
 
 ### Custom features
 ##### Bullet ricochet:

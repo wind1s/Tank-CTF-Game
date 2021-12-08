@@ -8,7 +8,7 @@ from utility import lookup_call
 from keyaction import KeyAction
 from eventhandler import EventHandler
 from sounds import CTFSounds
-from gameobjects import Tank
+from gameobjects import (Tank, Flag)
 from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE,
                     CO_OP_MODE, FRAMERATE)
 
@@ -16,7 +16,7 @@ from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE,
 class CTFGame:
     """ Main game class. Handles all major functionality. """
 
-    def __init__(self, game_mode, game_map, score_board=dict()):
+    def __init__(self, game_mode, game_map, score_board):
         self.running = True
         self.game_mode = game_mode
         self.current_map = game_map
@@ -39,12 +39,12 @@ class CTFGame:
 
         # Create game objects.
         self.boxes = cobj.create_boxes(self.current_map, self.space)
+        self.bases = cobj.create_bases(self.current_map)
         self.tanks = cobj.create_tanks(
             self.current_map, self.space, self.clock)
-        self.bases = cobj.create_bases(self.current_map)
-        self.flag = cobj.create_flag(self.current_map)
+        self.flag = Flag.create_flag(*self.current_map.flag_position)
 
-        self.game_objects = self.boxes + self.tanks + [self.flag] + self.bases
+        self.game_objects = self.bases + self.boxes + self.tanks + [self.flag]
 
         # Create ai's.
         self.ai_objects = cobj.create_ai(
@@ -142,7 +142,7 @@ class CTFGame:
 
                 if obj.has_won():
                     CTFSounds.victory.play()
-                    print(f"{obj.name} has won!")
+                    print(f"{obj.name} won this round!")
                     self.score_board[obj.name] += 1
 
                     self.print_score_board()

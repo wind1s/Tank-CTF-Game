@@ -3,7 +3,7 @@ import random as rand
 import math
 from utility import (
     get_tile_position, angle_between_vectors, periodic_difference_of_angles,
-    seconds_to_ms, reduce_until_zero)
+    seconds_to_ms, reduce_until_zero, list_comp)
 from collections import deque
 from gameobjects import (Tank, Flag, Box)
 
@@ -56,6 +56,10 @@ class Ai:
 
         self.path = deque()
         self.move_cycle = self.move_cycle_gen()
+
+    @staticmethod
+    def create_ai(tank, game_objects, space, current_map, clock):
+        return Ai(tank, game_objects, space, current_map, clock)
 
     def decide(self):
         """ Main decision function that gets called on every tick of the game. """
@@ -182,6 +186,18 @@ class Ai:
 
             self.tank.stop_moving()
 
+    def update_box_pos(self):
+        def zero_2d_matrix():
+            return [[0 for _ in range(self.current_map.width)]
+                    for _ in range(self.current_map.height)]
+
+        self.updated_boxes = zero_2d_matrix()
+
+        for obj in self.game_objects:
+            if isinstance(obj, Box):
+                tile_x, tile_y = get_tile_position(obj.get_pos())
+                self.updated_boxes[tile_y][tile_x] = obj.box_type
+
     def shorten_path(self, path):
         """ Shortens the path generated from a BFS search."""
         new_path = deque()
@@ -196,30 +212,29 @@ class Ai:
 
         return new_path
 
-    def tile_not_visited(self, tile, open, closed):
-        nodes = open + closed
-        for node in nodes:
-            if node.tile == tile:
-                return False
-        return True
-
     def find_shortest_path(self, origin, target, include_metal_box):
+        def tile_visited(tile, nodes):
+            for node in nodes:
+                if node.tile == tile:
+                    return True
+            return False
+
         origin = get_tile_position(origin)
-        open = [Node.create_node(origin, origin, target)]
-        closed = []
+        open_nodes = [Node.create_node(origin, origin, target)]
+        closed_nodes = []
         out = deque([])
 
         while open:
-            current = open[0]
+            current = open_nodes[0]
 
-            for node in open:
+            for node in open_nodes:
                 if (node.fcost < current.fcost or
                    (node.fcost == current.fcost and
                         node.hcost < current.hcost)):
                     current = node
 
-            open.remove(current)
-            closed.append(current)
+            open_nodes.remove(current)
+            closed_nodes.append(current)
 
             if current.tile == target:
                 while current is not None:
@@ -230,19 +245,11 @@ class Ai:
 
             for neighbor in self.get_tile_neighbors(
                     current.tile, include_metal_box):
-                if self.tile_not_visited(neighbor, open, closed):
-                    open.append(Node.create_node(
+                if not tile_visited(neighbor, open_nodes + closed_nodes):
+                    open_nodes.append(Node.create_node(
                         neighbor, origin, target, current))
+
         return out
-
-    def update_box_pos(self):
-        self.updated_boxes = [[0 for _ in range(self.current_map.width)]
-                              for k in range(self.current_map.height)]
-
-        for obj in self.game_objects:
-            if isinstance(obj, Box):
-                tile_x, tile_y = get_tile_position(obj.get_pos())
-                self.updated_boxes[tile_y][tile_x] = obj.box_type
 
     def get_target_tile(self):
         """ Returns position of the flag if we don't have it. If we do have the flag,
@@ -266,25 +273,24 @@ class Ai:
                     break
         return self.flag
 
-    def get_tile_neighbors(self, coord_vec, include_metal):
+    def get_tile_neighbors(self, coord_vec, include_metal_box):
         """ Returns all bordering grid squares of the input coordinate.
             A bordering square is only considered accessible if it is grass
             or a wooden box.
         """
         pos_vec = get_tile_position(coord_vec)
-        # Find the coordinates of the tiles' four neighbors
-        neighbors = [
+        # Generate the coordinates of the tiles' four neighbors
+        neighbors = (
             pos_vec + pym.Vec2d(0, -1),
             pos_vec + pym.Vec2d(-1, 0),
             pos_vec + pym.Vec2d(0, 1),
             pos_vec + pym.Vec2d(1, 0)
-        ]
+        )
 
-        out = []
-        for coord in neighbors:
-            if self.filter_tile_neighbors(coord, include_metal):
-                out.append(coord)
-        return out
+        def tile_pred(coord):
+            return self.filter_tile_neighbors(coord, include_metal_box)
+
+        return list_comp(neighbors, pred=tile_pred)
 
     def filter_tile_neighbors(self, coord, include_metal_box):
         x_in_bounds = coord.x >= 0 and coord.x <= self.MAX_X

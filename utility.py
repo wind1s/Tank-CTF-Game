@@ -1,6 +1,21 @@
 import math
 import pymunk as pym
-from images import CTFImages
+from config import TILE_SIZE
+
+
+def remove_object(game_objects, obj, shape=None, space=None):
+    """ Removes a physics object and it's body. """
+    if obj in game_objects:
+        game_objects.remove(obj)
+
+    if shape is not None:
+        assert space is not None, "If object has a shape then a space object must be provided to remove it from the game!"
+        space.remove(shape, shape.body)
+
+
+def add_object(game_objects, obj):
+    """ Adds a object to the game world. """
+    game_objects.append(obj)
 
 
 def seconds_to_ms(seconds: float):
@@ -38,7 +53,7 @@ def periodic_difference_of_angles(angle1, angle2):
 
 def physics_to_display(x):
     """ This function is used to convert coordinates in the physic engine into the display coordinates """
-    return x * CTFImages.TILE_SIZE
+    return x * TILE_SIZE
 
 
 def get_tile_position(position_vector):
@@ -50,3 +65,13 @@ def get_tile_position(position_vector):
 def reduce_until_zero(val, reduction):
     val -= reduction if val >= 0 else 0
     return val
+
+
+def generator_comp(*iterables, func=lambda x: x, pred=lambda *_: True):
+    """ Generator comprehension utility function. """
+    return (func(*args) for args in zip(*iterables) if pred)
+
+
+def list_comp(*iterables, func=lambda x: x, pred=lambda *_: True):
+    """ List comprehension utility function. """
+    return [func(*args) for args in zip(*iterables) if pred(*args)]

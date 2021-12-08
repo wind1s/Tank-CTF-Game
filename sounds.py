@@ -23,9 +23,12 @@ class CTFSounds():
     def load_sound(file):
         """ Load a sound file. """
         file = os.path.join(SOUNDS_PATH, file)
+
         try:
             sound = pyg.mixer.Sound(file)
+
         except pyg.error:
             raise SystemExit(
                 f"Could not load image \"{file}\" {pyg.get_error()}")
+
         return sound

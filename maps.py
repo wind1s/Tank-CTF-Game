@@ -4,9 +4,8 @@ import os
 import json
 import pickle
 import pygame as pyg
-from images import CTFImages
 from gameobjects import Box
-from utility import get_tile_position
+from config import TILE_SIZE
 
 
 class CTFMap:
@@ -22,9 +21,10 @@ class CTFMap:
         self.boxes = boxes
         self.start_positions = start_positions
         self.flag_position = flag_position
+        self.n_players = len(self.start_positions)
 
     def rect(self):
-        return pyg.Rect(0, 0, CTFImages.TILE_SIZE*self.width, CTFImages.TILE_SIZE*self.height)
+        return pyg.Rect(0, 0, TILE_SIZE*self.width, TILE_SIZE*self.height)
 
     def box_at(self, x, y):
         """ Return the type of the box at coordinates (x, y). """

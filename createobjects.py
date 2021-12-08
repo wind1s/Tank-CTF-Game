@@ -1,9 +1,10 @@
 import pygame as pyg
 import pymunk as pym
-from gameobjects import (Tank, Base, Flag, Box)
+from gameobjects import (Tank, Base, Box)
 from images import CTFImages
 from ai import Ai
-from config import PLAYER_NAMES
+from config import PLAYER_NAMES, TILE_SIZE
+from utility import list_comp
 
 
 def create_grass_background(current_map, screen):
@@ -16,45 +17,49 @@ def create_grass_background(current_map, screen):
             # image at the coordinates given as the second argument
             background.blit(
                 CTFImages.grass,
-                (x * CTFImages.TILE_SIZE, y * CTFImages.TILE_SIZE))
+                (x * TILE_SIZE, y * TILE_SIZE))
 
     return background
 
 
 def create_boxes(current_map, space):
     """ Creates boxes at map coord with corresponding box type. """
-    get_type = current_map.box_at
-
     width = current_map.width
     height = current_map.height
 
-    return [Box.get_box_with_type(x, y, get_type(x, y), space) for y in range(height)
-            for x in range(width) if get_type(x, y) != 0]
+    def box_func(x, y):
+        return Box.create_box(x, y, current_map.box_at(x, y), space)
+
+    def not_grass_tile(x, y):
+        return current_map.box_at(x, y) != Box.GRASS_TYPE
+
+    return [box_func(x, y) for y in range(height)
+            for x in range(width) if not_grass_tile(x, y)]
 
 
 def create_tanks(current_map, space, clock):
     """ Creates a tank at the start positions. """
-    n_tanks = len(current_map.start_positions)
-    pos = current_map.start_positions
+    def tank_func(index, tank_img):
+        tank_pos = current_map.start_positions[index]
+        return Tank(
+            PLAYER_NAMES[index],
+            tank_pos[0], tank_pos[1], tank_pos[2],
+            tank_img, space, clock, Tank.HIT_POINTS, Tank.NORMAL_MAX_SPEED)
 
-    return [Tank(PLAYER_NAMES[i], pos[i][0], pos[i][1], pos[i][2], CTFImages.tank_images[i],
-                 space, clock, Tank.HIT_POINTS, Tank.NORMAL_MAX_SPEED) for i in range(n_tanks)]
+    return list_comp(
+        range(current_map.n_players),
+        CTFImages.tank_images, func=tank_func)
 
 
 def create_bases(current_map):
     """ Creates a base at the start positions. """
-    n_bases = len(current_map.start_positions)
-    pos = current_map.start_positions
+    def base_func(index, base_img):
+        base_pos = current_map.start_positions[index]
+        return Base.create_base(base_pos[0], base_pos[1], base_img)
 
-    return [Base(pos[i][0], pos[i][1], CTFImages.base_images[i])
-            for i in range(n_bases)]
-
-
-def create_flag(current_map):
-    """ Creates the flag at its start position. """
-    return Flag(
-        current_map.flag_position[0],
-        current_map.flag_position[1])
+    return list_comp(
+        range(current_map.n_players),
+        CTFImages.base_images, func=base_func)
 
 
 def create_map_bounds(current_map, body):
@@ -72,4 +77,7 @@ def create_map_bounds(current_map, body):
 
 def create_ai(tanks, game_objects, space, current_map, clock):
     """ Creates the ai object to control tanks. """
-    return [Ai(tank, game_objects, space, current_map, clock) for tank in tanks]
+    def ai_func(tank):
+        return Ai.create_ai(tank, game_objects, space, current_map, clock)
+
+    return list_comp(tanks, func=ai_func)

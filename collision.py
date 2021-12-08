@@ -1,5 +1,5 @@
 from gameobjects import Tank, Bullet, Explosion, Box
-from images import CTFImages
+from utility import remove_object, add_object
 
 
 class CollisionHandler():
@@ -17,6 +17,7 @@ class CollisionHandler():
             Bullet.COLLISION_TYPE, Tank.COLLISION_TYPE,
             self.collision_bullet, self.collision_tank_bullet)
 
+        # Default collision handler.
         self.add_collision_handler(
             Bullet.COLLISION_TYPE, 0,
             self.collision_bullet, lambda *_: None)
@@ -25,12 +26,6 @@ class CollisionHandler():
         self.space.add_collision_handler(
             type1, type2).pre_solve = self.collision_handler_generator(
             handler1, handler2)
-
-    def remove_object(self, obj, shape):
-        """ Removes a physics object and it's body. """
-        if obj in self.game_objects:
-            self.game_objects.remove(obj)
-        self.space.remove(shape, shape.body)
 
     def collision_handler_generator(self, obj1_handler, obj2_handler):
         """ Generates a collison handler for two objects using respective object collision handler. """
@@ -49,7 +44,7 @@ class CollisionHandler():
         bullet = bullet_shape.parent
 
         bullet.set_velocity(0)
-        self.remove_object(bullet, bullet_shape)
+        remove_object(self.game_objects, bullet, bullet_shape, self.space)
 
         return True
 
@@ -72,7 +67,6 @@ class CollisionHandler():
             box.hit_points -= 1
 
             if box.hit_points <= 0:
-                Explosion.create_explosion(
-                    box.get_pos(),
-                    self.game_objects, self.clock)
-                self.remove_object(box, box_shape)
+                add_object(self.game_objects, Explosion.create_explosion(
+                    *box.get_pos(), self.game_objects, self.clock))
+                remove_object(self.game_objects, box, box_shape, self.space)

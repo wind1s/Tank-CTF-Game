@@ -179,34 +179,58 @@ class Ai:
 
         return new_path
 
+    class Node():
+        def __init__(self, tile, hcost, gcost, previous = None):
+            self.tile = tile
+            self.hcost = hcost
+            self.gcost = gcost
+            self.fcost = hcost + gcost
+            self.previous = previous
+
+    def create_node(self, tile, origin, target, previous = None):
+        gcost = (target - tile).length
+        hcost = (origin - tile).length
+        return self.Node(tile, hcost, gcost, previous)
+
+    def tile_not_visited(self, tile, open, closed):
+        nodes = open + closed
+        for node in nodes:
+            if node.tile == tile:
+                return False
+        return True
+
+
     def find_shortest_path(self, origin, target, include_metal):
-        """
-        A simple Breadth First Search using integer coordinates as our nodes.
-        Edges are calculated as we go, using an external function.
-        """
         origin = get_tile_position(origin)
-        paths = {origin.int_tuple: [origin]}
-        queue = deque([origin])
-        visited = set()
+        open = [self.create_node(origin, origin, target)]
+        closed = []
 
-        while queue:
-            node = queue.popleft()
+        while open:
+            current = open[0]
+            for node in open:
+                if (node.fcost < current.fcost or 
+                   (node.fcost == current.fcost and
+                    node.hcost < current.hcost)):
+                    current = node
+            open.remove(current)
+            closed.append(current)
 
-            if node == target:
-                shortest_path = paths[node.int_tuple].copy()
-                shortest_path.append(node)
-                return deque(shortest_path)
-
-            for neighbor in self.get_tile_neighbors(node, include_metal):
-                if neighbor.int_tuple not in visited:
-                    queue.append(neighbor)
-                    visited.add(neighbor.int_tuple)
-                    paths[neighbor.int_tuple] = paths[node.int_tuple].copy()
-                    paths[neighbor.int_tuple].append(neighbor)
-
-            del paths[node.int_tuple]
-
+            if current.tile == target:
+                out = deque()
+                while True:
+                    if current == None:
+                        break
+                    out.appendleft(current.tile)
+                    current = current.previous
+                return out
+                
+            for neighbor in self.get_tile_neighbors(current.tile, include_metal):
+                if self.tile_not_visited(neighbor, open, closed):
+                    open.append(self.create_node(neighbor, origin, target, current))
         return deque([])
+
+
+
 
     def update_box_pos(self):
         self.updated_boxes = [[0 for _ in range(self.current_map.width)]

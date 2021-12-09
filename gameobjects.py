@@ -144,6 +144,8 @@ class Tank(GamePhysicsObject):
         if self.shoot_cooldown > 0:
             return
 
+        CTFSounds.tank_shoot.play()
+
         self.shoot_cooldown = self.SHOOT_COOLDOWN_MS
         tank_angle = self.get_angle()
         offset_vector = pym.Vec2d(0, 0.5).rotated(tank_angle)
@@ -151,9 +153,6 @@ class Tank(GamePhysicsObject):
 
         add_object(game_objects, Bullet.create_bullet(
             *bullet_vec, tank_angle, self.bullet_max_speed, self.space))
-
-        #Play shooting sound
-        CTFSounds.tank_shoot.play()
 
     def get_shot(self):
         """ Reduces hitpoints if the tank has no protection. """
@@ -167,6 +166,8 @@ class Tank(GamePhysicsObject):
         """ Respawns the tank if it's hitpoints are 0. Returns if tank respawned. """
         if self.hit_points > 0:
             return False
+
+        CTFSounds.tank_death.play()
 
         add_object(game_objects, Explosion.create_explosion(
             *self.get_pos(), game_objects, self.clock))

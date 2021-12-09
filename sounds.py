@@ -11,13 +11,13 @@ class CTFSounds():
     music = None
 
     def __init__(self):
-        pyg.mixer.init()
-
         CTFSounds.score = self.load_sound("score_goodjob.wav")
         CTFSounds.tank_shoot = self.load_sound("tank_shoot.wav")
         CTFSounds.box_break = self.load_sound("box_break.wav")
         CTFSounds.tank_death = self.load_sound("tank_death.wav")
         CTFSounds.music = self.load_sound("music.wav")
+
+        CTFSounds.music.set_volume(0.6)
 
     @staticmethod
     def load_sound(file):

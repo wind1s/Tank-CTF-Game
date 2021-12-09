@@ -141,7 +141,7 @@ class CTFGame:
                 obj.try_grab_flag(self.flag)
 
                 if obj.has_won():
-                    CTFSounds.victory.play()
+                    CTFSounds.score.play()
                     print(f"{obj.name} won this round!")
                     self.score_board[obj.name] += 1
 

@@ -55,7 +55,7 @@ class CTFImages():
 
     @ staticmethod
     def scale_by_tile(percent):
-        return (TILE_SIZE*percent, TILE_SIZE*percent)
+        return (int(TILE_SIZE*percent), int(TILE_SIZE*percent))
 
     @ staticmethod
     def load_image(file, scale=None):

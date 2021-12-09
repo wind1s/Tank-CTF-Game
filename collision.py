@@ -1,5 +1,6 @@
 from gameobjects import Tank, Bullet, Explosion, Box
 from utility import remove_object, add_object
+from sounds import *
 
 
 class CollisionHandler():
@@ -70,3 +71,4 @@ class CollisionHandler():
                 add_object(self.game_objects, Explosion.create_explosion(
                     *box.get_pos(), self.game_objects, self.clock))
                 remove_object(self.game_objects, box, box_shape, self.space)
+                CTFSounds.box_break.play()

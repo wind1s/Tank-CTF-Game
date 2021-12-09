@@ -4,20 +4,20 @@ from config import SOUNDS_PATH
 
 
 class CTFSounds():
-    victory = None
-    shooting = None
-    wood_breaking = None
-    explosion = None
-    background = None
+    score = None
+    tank_shoot = None
+    box_break = None
+    tank_death = None
+    music = None
 
     def __init__(self):
         pyg.mixer.init()
 
-        CTFSounds.victory = self.load_sound("victory.wav")
-        CTFSounds.shooting = self.load_sound("shoot.wav")
-        CTFSounds.wood_breaking = self.load_sound("wood_breaking.wav")
-        CTFSounds.explosion = self.load_sound("wood_breaking.wav")
-        CTFSounds.background = self.load_sound("wood_breaking.wav")
+        CTFSounds.score = self.load_sound("score_goodjob.wav")
+        CTFSounds.tank_shoot = self.load_sound("tank_shoot.wav")
+        CTFSounds.box_break = self.load_sound("box_break.wav")
+        CTFSounds.tank_death = self.load_sound("tank_death.wav")
+        CTFSounds.music = self.load_sound("music.wav")
 
     @staticmethod
     def load_sound(file):

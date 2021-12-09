@@ -152,7 +152,8 @@ class Tank(GamePhysicsObject):
         add_object(game_objects, Bullet.create_bullet(
             *bullet_vec, tank_angle, self.bullet_max_speed, self.space))
 
-        CTFSounds.shooting.play()
+        #Play shooting sound
+        CTFSounds.tank_shoot.play()
 
     def get_shot(self):
         """ Reduces hitpoints if the tank has no protection. """

@@ -22,7 +22,8 @@ game_map = CTFMap.load_map(arguments.map)
 # Init the game sounds and images.
 CTFImages(game_map.n_players)
 CTFSounds()
-CTFSounds.background.play()
+CTFSounds.music.set_volume(0.6)
+CTFSounds.music.play()
 
 # Init game and run game loop.
 game = CTFGame(arguments.game_mode, game_map, {})

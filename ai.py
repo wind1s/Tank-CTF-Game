@@ -175,6 +175,7 @@ class Ai:
             self.tank.stop_moving()
 
     def update_box_pos(self):
+        """Creates a grid of current positions of boxes"""
         def zero_2d_matrix():
             return [[0 for _ in range(self.current_map.width)]
                     for _ in range(self.current_map.height)]
@@ -185,6 +186,26 @@ class Ai:
             if isinstance(obj, Box):
                 tile_x, tile_y = get_tile_position(obj.get_pos())
                 self.updated_boxes[tile_y][tile_x] = obj.box_type
+
+    def update_avoid_boxes(self):
+        """Sets tiles in other tanks' sightlines to stone walls"""
+        self.update_box_pos()
+        tanks = self.get_other_tanks()
+        for tank in tanks:
+            tank_dir = self.get_tank_direction(tank)
+            tile = get_tile_position(tank.get_pos())
+            while True:
+                tile = tile + tank_dir
+                if (tile.x >= 0 and tile.x < self.current_map.width and
+                    tile.y >= 0 and tile.y < self.current_map.height):
+                    if self.updated_boxes[tile.y][tile.x] == 0:
+                       self.updated_boxes[tile.y][tile.x] = 1
+                    elif self.updated_boxes[tile.y][tile.x] > 0:
+                        self.updated_boxes[tile.y][tile.x] = 1
+                        break
+                else:
+                    break
+        return
 
     def shorten_path(self, path):
         """ Shortens the path generated from an A* search."""
@@ -259,6 +280,7 @@ class Ai:
 
         return self.find_prio_path(self.tank.get_pos(), intercept_point)
 
+
     def get_path(self):
         """ Finds target path. Goes to flag if on ground, intecepts tank
         with flag if picked up. Goes to base if we have flag.
@@ -277,8 +299,17 @@ class Ai:
 
             return initial_path
 
-        return self.find_prio_path(self.tank.get_pos(),
+        self.update_avoid_boxes()
+        path = self.find_prio_path(self.tank.get_pos(),
                                    self.tank.start_position)
+        self.update_box_pos()
+
+        if path:
+            return path
+        else:
+            return self.find_prio_path(self.tank.get_pos(),
+                                   self.tank.start_position)
+
 
     def get_flag(self):
         """ This has to be called to get the flag, since we don't know
@@ -291,6 +322,30 @@ class Ai:
                     self.flag = obj
                     break
         return self.flag
+
+    def get_other_tanks(self):
+        """Returns all tanks in game_objects except for this one"""
+        out = []
+        for obj in self.game_objects:
+            if type(obj) == Tank and obj is not self.tank:
+                out.append(obj)
+        return out
+
+    def get_tank_direction(self, tank):
+        angle = tank.body.angle + math.pi/8
+        while angle < 0:
+            angle += 2*math.pi
+        while angle >= 2*math.pi:
+            angle -= 2*math.pi
+        if angle >= 0 and angle < math.pi/2:
+            return(pym.Vec2d(0, 1))
+        elif angle >= math.pi/2 and angle < math.pi:
+            return(pym.Vec2d(-1, 0))
+        elif angle >= math.pi and angle < math.pi*(3/2):
+            return(pym.Vec2d(0, -1))
+        elif angle >= math.pi*(3/2) and angle < 2*math.pi:
+            return(pym.Vec2d(1, 0))
+        return None
 
     def get_tile_neighbors(self, coord_vec, include_metal_box):
         """ Returns all bordering grid squares of the input coordinate.

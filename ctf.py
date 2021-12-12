@@ -12,7 +12,6 @@ from config import TERMINAL_DISPLAY_TITLE
 print(TERMINAL_DISPLAY_TITLE)
 arguments = parse_game_cmd_args()
 
-pyg.mixer.pre_init(44100, -16, 1, 512)
 pyg.mixer.init()
 
 # Init the display

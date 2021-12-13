@@ -1,28 +1,6 @@
 import argparse
-import os
 from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE,
-                    CO_OP_MODE, MAP_PATH)
-
-
-def parse_editor_cmd_args():
-    parser = argparse.ArgumentParser(
-        description='Map editor for CTF game.')
-    parser.add_argument(
-        "size",
-        type=str,
-        help="Choose the size of the map."
-    )
-    """
-    parser.add_argument(
-        "--map",
-        type=str,
-        default=os.path.join(MAP_PATH, "map0.txt"),
-        choices=(),
-        help="set the map to play."
-    )
-    """
-
-    return parser.parse_args()
+                    CO_OP_MODE)
 
 
 def parse_game_cmd_args():

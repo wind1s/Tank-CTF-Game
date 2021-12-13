@@ -31,10 +31,12 @@ class CTFMap:
         return self.boxes[y][x]
 
     def in_bounds(self, x, y):
+        """ Checks if a coordinate x,y is in bounds of the map. """
         return 0 <= x < self.width and 0 <= y < self.height
 
     @ staticmethod
     def create_map(boxes, start_positions, flag_position):
+        """ Factory function to createa a CTFMap object. """
         map_width = len(boxes[0])
         map_height = len(boxes)
         return CTFMap(
@@ -94,7 +96,7 @@ class CTFMap:
 
     @ staticmethod
     def check_map_members(boxes, start_positions, flag_position):
-        """"""
+        """ Checks that each map member is correctly defined. """
         n_rows = len(boxes[0])
 
         entire_board_defined = all(len(row) == n_rows for row in boxes)

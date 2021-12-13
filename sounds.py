@@ -18,6 +18,7 @@ class CTFSounds():
         CTFSounds.music = self.load_sound("music.wav")
 
         CTFSounds.music.set_volume(0.6)
+        CTFSounds.music.play(-1)
 
     @staticmethod
     def load_sound(file):

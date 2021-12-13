@@ -24,6 +24,7 @@ def seconds_to_ms(seconds: float):
 
 
 def is_float(n):
+    """ Check if n is a float. """
     try:
         float(n)
     except ValueError:
@@ -33,6 +34,7 @@ def is_float(n):
 
 
 def lookup_call(mapped_name, callback_table, args_table={}):
+    """ Looks up and calls a function in a table via a key name with arguments."""
     # Check if key has defined functionality.
     if mapped_name in callback_table:
         # Callback has supplied arguments.
@@ -72,6 +74,7 @@ def get_tile_position(position_vector):
 
 
 def reduce_until_zero(val, reduction):
+    """ Reduces a value just below 0. """
     val -= reduction if val >= 0 else 0
     return val
 

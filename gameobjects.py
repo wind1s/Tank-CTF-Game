@@ -174,10 +174,12 @@ class Tank(GamePhysicsObject):
 
         self.hit_points = self.max_hit_points
         self.shoot_cooldown = 0
+        # Give tank respawn protection.
         self.protection_time = self.SPAWN_PROTECTION_MS
 
         self.try_drop_flag()
 
+        # Reset tank movement and move it to its starting positions
         start_x = self.start_position[0]
         start_y = self.start_position[1]
         start_angle = math.radians(self.start_orientation)
@@ -190,19 +192,24 @@ class Tank(GamePhysicsObject):
         return True
 
     def set_pos(self, x, y):
+        """ Setter function for the tank position. """
         self.body.position = pym.Vec2d(x, y)
 
     def set_angle(self, angle):
+        """ Setter function for the tank angle. """
         self.body.angle = angle
 
     def get_pos(self):
+        """ Getter function for the tank position. """
         return self.body.position
 
     def get_angle(self):
+        """ Getter function for the tank angle. """
         return self.body.angle
 
 
 class Bullet(GamePhysicsObject):
+    """ Extends GamePhysicsObject to represent a bullet object. """
     COLLISION_TYPE = 1
     MAX_SPEED = 4
 
@@ -224,19 +231,12 @@ class Bullet(GamePhysicsObject):
         self.body.velocity += speed_vector
 
     def set_velocity(self, velocity):
+        """ Setter function for the bullets velocity. """
         self.body.velocity = pym.Vec2d(0, velocity)
-
-    def set_angle(self, angle):
-        self.body.angle = angle
-
-    def get_pos(self):
-        return self.body.position
-
-    def get_angle(self):
-        return self.body.angle
 
     @staticmethod
     def create_bullet(x, y, orientation, speed, space):
+        """ Factory function for creating a bullet object. """
         return Bullet(x, y, orientation, speed, CTFImages.bullet, space)
 
 
@@ -260,9 +260,6 @@ class Box(GamePhysicsObject):
     def get_pos(self):
         return self.body.position
 
-    def get_angle(self):
-        return self.body.angle
-
     @staticmethod
     def create_box(x, y, box_type, space):
         """ Creates a box instance with specified type. """
@@ -281,6 +278,10 @@ class Box(GamePhysicsObject):
             return Box(
                 x, y, CTFImages.metalbox, True, space, False, Box.METALBOX_TYPE)
 
+    def get_shot(self):
+        """ Performs logic when box gets shot. """
+        self.hit_points -= 1
+
 
 class Flag(GameVisibleObject):
     """ This class extends GameVisibleObject for representing flags."""
@@ -292,9 +293,11 @@ class Flag(GameVisibleObject):
 
     @staticmethod
     def create_flag(x, y):
+        """ Factory function for creating a flag object. """
         return Flag(x, y, CTFImages.flag)
 
     def get_pos(self):
+        """ Getter function for the flags position. """
         return pym.Vec2d(self.x, self.y)
 
 
@@ -304,6 +307,7 @@ class Base(GameVisibleObject):
 
     @staticmethod
     def create_base(x, y, sprite):
+        """ Factory function for creating a base object. """
         return Base(x, y, sprite)
 
 
@@ -315,6 +319,7 @@ class Explosion(GameVisibleObject):
         self.clock = clock
 
     def post_update(self):
+        """ post_update override for updating the explosion object. """
         self.update_explosion()
 
     def update_explosion(self):
@@ -328,4 +333,5 @@ class Explosion(GameVisibleObject):
 
     @staticmethod
     def create_explosion(x, y, game_objects, clock):
+        """ Factory function for creating a explosion object. """
         return Explosion(x, y, CTFImages.explosion, game_objects, clock)

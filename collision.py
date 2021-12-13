@@ -44,6 +44,7 @@ class CollisionHandler():
         """ Handles bullet collisions. """
         bullet = bullet_shape.parent
 
+        # Remove bullets velocity to remove knockback effect on other objects.
         bullet.set_velocity(0)
         remove_object(self.game_objects, bullet, bullet_shape, self.space)
 
@@ -65,10 +66,10 @@ class CollisionHandler():
         box_collision_type = box.box_type
 
         if box_collision_type == Box.WOODBOX_TYPE:
-            box.hit_points -= 1
+            box.get_shot()
 
             if box.hit_points <= 0:
+                CTFSounds.box_break.play()
                 add_object(self.game_objects, Explosion.create_explosion(
                     *box.get_pos(), self.game_objects, self.clock))
                 remove_object(self.game_objects, box, box_shape, self.space)
-                CTFSounds.box_break.play()

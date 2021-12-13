@@ -30,14 +30,17 @@ class CTFMap:
         """ Return the type of the box at coordinates (x, y). None if out of bounds. """
         return self.boxes[y][x]
 
-    @staticmethod
+    def in_bounds(self, x, y):
+        return x >= 0 and x < self.width and y >= 0 and y < self.height
+
+    @ staticmethod
     def create_map(boxes, start_positions, flag_position):
         map_width = len(boxes[0])
         map_height = len(boxes)
         return CTFMap(
             map_width, map_height, boxes, start_positions, flag_position)
 
-    @staticmethod
+    @ staticmethod
     def check_map_obj(boxes, start_positions, flag_position):
 
         n_rows = len(boxes[0])
@@ -59,7 +62,7 @@ class CTFMap:
             flag_pos_x)] == Box.GRASS_TYPE
         assert flag_pos_on_grass, "Flag position is not on a grass tile."
 
-    @staticmethod
+    @ staticmethod
     def load_map(map_file_name):
         """ Loads a map file. """
 
@@ -71,10 +74,10 @@ class CTFMap:
             else:
                 assert False, f"Can't read map file type."
 
-    @staticmethod
+    @ staticmethod
     def load_txt_map(map_file):
         """ Loads a map from a txt file. """
-        #assert False, "Reading txt map files is not implemented yet!"
+        # assert False, "Reading txt map files is not implemented yet!"
         ctfmap_object = pickle.load(map_file)
         CTFMap.check_txt_file(ctfmap_object)
 
@@ -82,7 +85,7 @@ class CTFMap:
             ctfmap_object.boxes, ctfmap_object.start_positions, ctfmap_object.
             flag_position)
 
-    @staticmethod
+    @ staticmethod
     def load_json_map(map_file):
         """ Loads a map from a json file. """
         json_obj = json.load(map_file)
@@ -93,7 +96,7 @@ class CTFMap:
             json_obj[JSON_START_POS_REF],
             json_obj[JSON_FLAG_POS_REF])
 
-    @staticmethod
+    @ staticmethod
     def check_txt_file(map_obj):
         """ Checks if a txt map file contains a CTFMap object. """
         assert isinstance(
@@ -102,7 +105,7 @@ class CTFMap:
         CTFMap.check_map_obj(map_obj.boxes, map_obj.start_positions,
                              map_obj.flag_position)
 
-    @staticmethod
+    @ staticmethod
     def check_json_file(json_obj):
         """ Checks if json map file is correct. """
         for setting in (JSON_BOXES_REF, JSON_START_POS_REF, JSON_FLAG_POS_REF):
@@ -157,9 +160,9 @@ if __name__ == "__main__":
     map2 = CTFMap(10, 5,
                   [[0, 2, 0, 2, 0, 0, 2, 0, 2, 0],
                    [0, 3, 0, 1, 3, 3, 1, 0, 3, 0],
-                      [0, 1, 0, 1, 0, 0, 1, 0, 1, 0],
-                      [0, 3, 0, 1, 3, 3, 1, 0, 3, 0],
-                      [0, 2, 0, 2, 0, 0, 2, 0, 2, 0]],
+                   [0, 1, 0, 1, 0, 0, 1, 0, 1, 0],
+                   [0, 3, 0, 1, 3, 3, 1, 0, 3, 0],
+                   [0, 2, 0, 2, 0, 0, 2, 0, 2, 0]],
                   [[0.5, 2.5, 270], [9.5, 2.5, 90]], [5, 2.5])
 
     # Serialize all map objects to txt files.

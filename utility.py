@@ -67,11 +67,6 @@ def reduce_until_zero(val, reduction):
     return val
 
 
-def generator_comp(*iterables, func=lambda x: x, pred=lambda *_: True):
-    """ Generator comprehension utility function. """
-    return (func(*args) for args in zip(*iterables) if pred)
-
-
 def list_comp(*iterables, func=lambda x: x, pred=lambda *_: True):
     """ List comprehension utility function. """
     return [func(*args) for args in zip(*iterables) if pred(*args)]

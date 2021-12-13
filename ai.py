@@ -39,8 +39,8 @@ class Ai:
         self.clock = clock
 
         # Buff tanks.
-        tank.max_speed = tank.max_speed*1.3
-        tank.bullet_max_speed = tank.bullet_max_speed*1.2
+        tank.max_speed *= 1.3
+        tank.bullet_max_speed *= 1.2
         self.tank = tank
 
         self.flag = None
@@ -191,15 +191,18 @@ class Ai:
         """Sets tiles in other tanks' sightlines to stone walls"""
         self.update_box_pos()
         tanks = self.get_other_tanks()
+
         for tank in tanks:
             tank_dir = self.get_tank_direction(tank)
             tile = get_tile_position(tank.get_pos())
+
             while True:
                 tile = tile + tank_dir
-                if (tile.x >= 0 and tile.x < self.current_map.width and
-                    tile.y >= 0 and tile.y < self.current_map.height):
+
+                if self.current_map.in_bounds(tile.x, tile.y):
                     if self.updated_boxes[tile.y][tile.x] == 0:
-                       self.updated_boxes[tile.y][tile.x] = 1
+
+                        self.updated_boxes[tile.y][tile.x] = 1
                     elif self.updated_boxes[tile.y][tile.x] > 0:
                         self.updated_boxes[tile.y][tile.x] = 1
                         break
@@ -237,6 +240,7 @@ class Ai:
 
         while open_nodes:
             current = open_nodes[0]
+
             for node in open_nodes:
                 if (node.fcost < current.fcost or
                    (node.fcost == current.fcost and
@@ -275,11 +279,9 @@ class Ai:
         for coord1, coord2 in zip(flag_path, naive_path):
             if coord1 == coord2:
                 intercept_point = coord1
-                print("intercept point", coord1)
                 break
 
         return self.find_prio_path(self.tank.get_pos(), intercept_point)
-
 
     def get_path(self):
         """ Finds target path. Goes to flag if on ground, intecepts tank
@@ -300,16 +302,14 @@ class Ai:
             return initial_path
 
         self.update_avoid_boxes()
-        path = self.find_prio_path(self.tank.get_pos(),
+        path = self.find_prio_path(tank_pos,
                                    self.tank.start_position)
         self.update_box_pos()
 
-        if path:
-            return path
-        else:
-            return self.find_prio_path(self.tank.get_pos(),
-                                   self.tank.start_position)
-
+        if not path:
+            return self.find_prio_path(tank_pos,
+                                       self.tank.start_position)
+        return path
 
     def get_flag(self):
         """ This has to be called to get the flag, since we don't know
@@ -325,26 +325,32 @@ class Ai:
 
     def get_other_tanks(self):
         """Returns all tanks in game_objects except for this one"""
-        out = []
-        for obj in self.game_objects:
-            if type(obj) == Tank and obj is not self.tank:
-                out.append(obj)
-        return out
+        def is_other_tank(obj):
+            return isinstance(obj, Tank) and obj is not self.tank
+
+        return list_comp(self.game_objects, pred=is_other_tank)
 
     def get_tank_direction(self, tank):
         angle = tank.body.angle + math.pi/8
+
         while angle < 0:
             angle += 2*math.pi
+
         while angle >= 2*math.pi:
             angle -= 2*math.pi
+
         if angle >= 0 and angle < math.pi/2:
             return(pym.Vec2d(0, 1))
+
         elif angle >= math.pi/2 and angle < math.pi:
             return(pym.Vec2d(-1, 0))
+
         elif angle >= math.pi and angle < math.pi*(3/2):
             return(pym.Vec2d(0, -1))
+
         elif angle >= math.pi*(3/2) and angle < 2*math.pi:
             return(pym.Vec2d(1, 0))
+
         return None
 
     def get_tile_neighbors(self, coord_vec, include_metal_box):
@@ -368,15 +374,10 @@ class Ai:
             neighbors, func=lambda vec: vec.int_tuple, pred=tile_pred)
 
     def filter_tile_neighbors(self, coord, include_metal_box):
-        def get_box():
-            if 0 <= coord.x <= self.MAX_X and 0 <= coord.y <= self.MAX_Y:
-                return self.updated_boxes[coord.y][coord.x]
-
-            return None
-
-        box_type = get_box()
-        if box_type is None:
+        if not self.current_map.in_bounds(coord.x, coord.y):
             return False
+
+        box_type = self.updated_boxes[coord.y][coord.x]
 
         box_is_wood = box_type == Box.WOODBOX_TYPE
         box_is_grass = box_type == Box.GRASS_TYPE

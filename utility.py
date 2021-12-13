@@ -23,6 +23,15 @@ def seconds_to_ms(seconds: float):
     return seconds * 1000.0
 
 
+def is_float(n):
+    try:
+        float(n)
+    except ValueError:
+        return False
+
+    return True
+
+
 def lookup_call(mapped_name, callback_table, args_table={}):
     # Check if key has defined functionality.
     if mapped_name in callback_table:

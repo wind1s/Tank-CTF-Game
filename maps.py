@@ -2,10 +2,10 @@ from config import (MAP_PATH, JSON_START_POS_REF,
                     JSON_BOXES_REF, JSON_FLAG_POS_REF)
 import os
 import json
-import pickle
 import pygame as pyg
 from gameobjects import Box
 from config import TILE_SIZE
+from utility import is_float
 
 
 class CTFMap:
@@ -31,7 +31,7 @@ class CTFMap:
         return self.boxes[y][x]
 
     def in_bounds(self, x, y):
-        return x >= 0 and x < self.width and y >= 0 and y < self.height
+        return 0 <= x < self.width and 0 <= y < self.height
 
     @ staticmethod
     def create_map(boxes, start_positions, flag_position):
@@ -41,8 +41,60 @@ class CTFMap:
             map_width, map_height, boxes, start_positions, flag_position)
 
     @ staticmethod
-    def check_map_obj(boxes, start_positions, flag_position):
+    def load_map(map_file_name):
+        """ Loads a map file. """
 
+        with open(os.path.join(MAP_PATH, map_file_name), "r") as outfile:
+            if map_file_name.endswith(".txt"):
+                return CTFMap.load_txt_map(outfile)
+            elif map_file_name.endswith(".json"):
+                return CTFMap.load_json_map(outfile)
+            else:
+                assert False, f"Can't read map file type."
+
+    @ staticmethod
+    def load_txt_map(map_file):
+        """ Loads a map from a txt file. """
+        map_boxes = []
+        start_positions = []
+        flag_position = []
+        data_ref = []
+        file_data = map_file.readlines()
+
+        for row in file_data:
+            if row == "boxes\n":
+                data_ref = map_boxes
+
+            elif row == "start_positions\n":
+                data_ref = start_positions
+
+            elif row == "flag_position\n":
+                data_ref = flag_position
+
+            else:
+                row = row.replace("\n", "").split(",")
+                data_ref.append([float(k) for k in row if is_float(k)])
+
+        map_obj = CTFMap.create_map(map_boxes, start_positions, *flag_position)
+
+        CTFMap.check_txt_file(map_obj)
+
+        return map_obj
+
+    @ staticmethod
+    def load_json_map(map_file):
+        """ Loads a map from a json file. """
+        json_obj = json.load(map_file)
+        CTFMap.check_json_file(json_obj)
+
+        return CTFMap.create_map(
+            json_obj[JSON_BOXES_REF],
+            json_obj[JSON_START_POS_REF],
+            json_obj[JSON_FLAG_POS_REF])
+
+    @ staticmethod
+    def check_map_members(boxes, start_positions, flag_position):
+        """"""
         n_rows = len(boxes[0])
 
         entire_board_defined = all(len(row) == n_rows for row in boxes)
@@ -63,47 +115,14 @@ class CTFMap:
         assert flag_pos_on_grass, "Flag position is not on a grass tile."
 
     @ staticmethod
-    def load_map(map_file_name):
-        """ Loads a map file. """
-
-        with open(os.path.join(MAP_PATH, map_file_name), "rb") as outfile:
-            if map_file_name.endswith(".txt"):
-                return CTFMap.load_txt_map(outfile)
-            elif map_file_name.endswith(".json"):
-                return CTFMap.load_json_map(outfile)
-            else:
-                assert False, f"Can't read map file type."
-
-    @ staticmethod
-    def load_txt_map(map_file):
-        """ Loads a map from a txt file. """
-        # assert False, "Reading txt map files is not implemented yet!"
-        ctfmap_object = pickle.load(map_file)
-        CTFMap.check_txt_file(ctfmap_object)
-
-        return CTFMap.create_map(
-            ctfmap_object.boxes, ctfmap_object.start_positions, ctfmap_object.
-            flag_position)
-
-    @ staticmethod
-    def load_json_map(map_file):
-        """ Loads a map from a json file. """
-        json_obj = json.load(map_file)
-        CTFMap.check_json_file(json_obj)
-
-        return CTFMap.create_map(
-            json_obj[JSON_BOXES_REF],
-            json_obj[JSON_START_POS_REF],
-            json_obj[JSON_FLAG_POS_REF])
-
-    @ staticmethod
     def check_txt_file(map_obj):
         """ Checks if a txt map file contains a CTFMap object. """
-        assert isinstance(
-            map_obj, CTFMap), "txt file does not contain a CTFMap object!"
+        assert map_obj.boxes is not None, "map.txt file does not contain a boxes declaration."
+        assert map_obj.start_positions is not None, "map.txt file does not contain a start_positions declaration."
+        assert map_obj.flag_position is not None, "map.txt file does not contain a flag_position declaration."
 
-        CTFMap.check_map_obj(map_obj.boxes, map_obj.start_positions,
-                             map_obj.flag_position)
+        CTFMap.check_map_members(map_obj.boxes, map_obj.start_positions,
+                                 map_obj.flag_position)
 
     @ staticmethod
     def check_json_file(json_obj):
@@ -112,7 +131,7 @@ class CTFMap:
             assert setting in json_obj.keys(
             ), f"Setting {setting} is not defined in json map file."
 
-        CTFMap.check_map_obj(
+        CTFMap.check_map_members(
             json_obj[JSON_BOXES_REF],
             json_obj[JSON_START_POS_REF],
             json_obj[JSON_FLAG_POS_REF])
@@ -166,6 +185,21 @@ if __name__ == "__main__":
                   [[0.5, 2.5, 270], [9.5, 2.5, 90]], [5, 2.5])
 
     # Serialize all map objects to txt files.
+
     for i, ctfmap in enumerate((map0, map1, map2)):
-        with open(f"./map_files/map{i}.txt", "wb") as file:
-            pickle.dump(ctfmap, file)
+        with open(f"./map_files/map{i}.txt", "w") as file:
+
+            x_rows = (",".join((str(x)
+                                for x in y)) + "\n" for y in ctfmap.boxes)
+
+            start_pos = (",".join((str(x) for x in y)) + "\n"
+                         for y in ctfmap.start_positions)
+
+            flag_pos = ",".join((str(n) for n in ctfmap.flag_position))
+
+            file.write("boxes\n")
+            file.writelines(x_rows)
+            file.write("start_positions\n")
+            file.writelines(start_pos)
+            file.write("flag_position\n")
+            file.write(flag_pos)

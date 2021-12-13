@@ -29,8 +29,8 @@ TANKS_IMG_FILES = ("tank_orange.png", "tank_blue.png", "tank_white.png",
                    "tank_yellow.png", "tank_red.png", "tank_gray.png")
 BASES_IMG_FILES = ("base_orange.png", "base_blue.png", "base_white.png",
                    "base_yellow.png", "base_red.png", "base_gray.png")
-PLAYER_NAMES = ("Player 1", "Player 2", "Player 3",
-                "Player 4", "Player 5", "Player 6")
+PLAYER_NAMES = ("Human player", "William AI", "Petter AI",
+                "Player 4 AI", "Player 5 AI", "Player 6 AI")
 
 TERMINAL_DISPLAY_TITLE = """
    _____            _                    _______ _            ______ _

@@ -21,8 +21,12 @@ class CTFImages():
 
     def __init__(self, n_players):
         default_scale = CTFImages.scale_by_tile(1)
-        CTFImages.explosion = self.load_image(
+
+        CTFImages.regular_explosion = self.load_image(
             EXPLOSION_IMG_FILE, CTFImages.scale_by_tile(1.5))
+        CTFImages.small_explosion = CTFImages.scale_img(
+            CTFImages.regular_explosion, CTFImages.scale_by_tile(0.9))
+
         CTFImages.grass = self.load_image(
             GRASS_IMG_FILE, default_scale)
         CTFImages.rockbox = self.load_image(
@@ -72,6 +76,11 @@ class CTFImages():
         surface = surface.convert_alpha()
 
         if scale is not None:
-            return pyg.transform.scale(surface, scale)
+            return CTFImages.scale_img(surface, scale)
 
         return surface
+
+    @staticmethod
+    def scale_img(img, scale):
+        """ Scales an image using a scale. """
+        return pyg.transform.scale(img, scale)

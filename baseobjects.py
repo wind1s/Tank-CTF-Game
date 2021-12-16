@@ -1,5 +1,5 @@
 import math
-import utility
+from utility import (remove_object, physics_to_display)
 import pygame as pyg
 import pymunk as pym
 from config import DEBUG, TILE_SIZE
@@ -42,6 +42,10 @@ class GameObject:
         offset = pym.Vec2d(sprite.get_size()) / 2.
         p = p - offset
         screen.blit(sprite, p)  # Copy the sprite on the screen
+
+    def destroy(self, shape, game_objects, space, clock):
+        remove_object(game_objects, self, shape, space)
+        return True
 
 
 class GamePhysicsObject(GameObject):
@@ -98,7 +102,7 @@ class GamePhysicsObject(GameObject):
 
     def screen_position(self):
         """ Converts the body's position in the physics engine to screen coordinates. """
-        return utility.physics_to_display(self.body.position)
+        return physics_to_display(self.body.position)
 
     def screen_orientation(self):
         """ Angles are reversed from the engine to the display. """
@@ -110,7 +114,7 @@ class GamePhysicsObject(GameObject):
         if DEBUG:
             ps = [self.body.position+p for p in self.points]
 
-            ps = [utility.physics_to_display(p) for p in ps]
+            ps = [physics_to_display(p) for p in ps]
             ps += [ps[0]]
             pyg.draw.lines(
                 screen, pyg.color.THECOLORS["red"],
@@ -128,7 +132,7 @@ class GameVisibleObject(GameObject):
         super().__init__(sprite)
 
     def screen_position(self):
-        return utility.physics_to_display(pym.Vec2d(self.x, self.y))
+        return physics_to_display(pym.Vec2d(self.x, self.y))
 
     def screen_orientation(self):
         return self.orientation

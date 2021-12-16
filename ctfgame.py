@@ -16,7 +16,7 @@ from config import (SINGLEPLAYER_MODE, HOT_MULTIPLAYER_MODE,
 class CTFGame:
     """ Main game class. Handles all major functionality. """
 
-    def __init__(self, game_mode, game_map, score_board):
+    def __init__(self, game_mode, game_map, score_board, difficulty):
         self.running = True
         self.game_mode = game_mode
         self.current_map = game_map
@@ -49,7 +49,8 @@ class CTFGame:
         # Create ai's.
         self.ai_objects = cobj.create_ai(
             self.tanks[1:],
-            self.game_objects, self.space, self.current_map, self.clock)
+            self.game_objects, self.space, self.current_map, self.clock,
+            difficulty)
         # Setup score board.
         self.score_board = score_board
 

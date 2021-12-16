@@ -1,7 +1,7 @@
 import math
 import pymunk as pym
 from utility import (reduce_until_zero, seconds_to_ms,
-                     clamp, get_tile_position, add_object)
+                     clamp, get_tile_position, add_object, remove_object)
 from baseobjects import (GamePhysicsObject, GameVisibleObject)
 from sounds import CTFSounds
 from images import CTFImages
@@ -169,8 +169,10 @@ class Tank(GamePhysicsObject):
 
         CTFSounds.tank_death.play()
 
-        add_object(game_objects, Explosion.create_explosion(
-            *self.get_pos(), game_objects, self.clock))
+        add_object(
+            game_objects, Explosion.create_explosion(
+                *self.get_pos(),
+                CTFImages.regular_explosion, game_objects, self.clock))
 
         self.hit_points = self.max_hit_points
         self.shoot_cooldown = 0
@@ -234,10 +236,22 @@ class Bullet(GamePhysicsObject):
         """ Setter function for the bullets velocity. """
         self.body.velocity = pym.Vec2d(0, velocity)
 
+    def get_pos(self):
+        """ Getter function for the bullets position. """
+        return self.body.position
+
     @staticmethod
     def create_bullet(x, y, orientation, speed, space):
         """ Factory function for creating a bullet object. """
         return Bullet(x, y, orientation, speed, CTFImages.bullet, space)
+
+    def destroy(self, shape, game_objects, space, clock):
+        # Remove bullets velocity to remove knockback effect on other objects.
+        self.set_velocity(0)
+        remove_object(game_objects, self, shape, space)
+        add_object(game_objects, Explosion.create_explosion(
+            *self.get_pos(), CTFImages.small_explosion, game_objects, clock))
+        return True
 
 
 class Box(GamePhysicsObject):
@@ -249,7 +263,8 @@ class Box(GamePhysicsObject):
     METALBOX_TYPE = 3
     MAX_HIT_POINTS = 2
 
-    def __init__(self, x, y, sprite, movable, space, destructable, box_type):
+    def __init__(
+            self, x, y, sprite, movable, space, destructable, box_type):
         """ It takes as arguments the coordinate of the starting position of the box (x,y) and the box model (boxmodel). """
         super().__init__(x, y, 0, sprite, space, movable)
         self.destructable = destructable
@@ -260,7 +275,7 @@ class Box(GamePhysicsObject):
     def get_pos(self):
         return self.body.position
 
-    @staticmethod
+    @ staticmethod
     def create_box(x, y, box_type, space):
         """ Creates a box instance with specified type. """
         # Offsets the coordinate to the center of the tile
@@ -280,7 +295,21 @@ class Box(GamePhysicsObject):
 
     def get_shot(self):
         """ Performs logic when box gets shot. """
+        if self.box_type != Box.WOODBOX_TYPE:
+            return
+
         self.hit_points -= 1
+
+    def destroy(self, shape, game_objects, space, clock):
+        if self.hit_points > 0:
+            return False
+
+        CTFSounds.box_break.play()
+        add_object(game_objects, Explosion.create_explosion(
+            *self.get_pos(), CTFImages.regular_explosion, game_objects, clock))
+        remove_object(game_objects, self, shape, space)
+
+        return True
 
 
 class Flag(GameVisibleObject):
@@ -291,7 +320,7 @@ class Flag(GameVisibleObject):
         self.is_on_tank = False
         self.target_base = pym.Vec2d(0, 0)
 
-    @staticmethod
+    @ staticmethod
     def create_flag(x, y):
         """ Factory function for creating a flag object. """
         return Flag(x, y, CTFImages.flag)
@@ -305,7 +334,7 @@ class Base(GameVisibleObject):
     def __init__(self, x, y, sprite):
         super().__init__(x, y, sprite)
 
-    @staticmethod
+    @ staticmethod
     def create_base(x, y, sprite):
         """ Factory function for creating a base object. """
         return Base(x, y, sprite)
@@ -331,7 +360,7 @@ class Explosion(GameVisibleObject):
         if self.explosion_time < 0:
             self.game_objects.remove(self)
 
-    @staticmethod
-    def create_explosion(x, y, game_objects, clock):
+    @ staticmethod
+    def create_explosion(x, y, sprite, game_objects, clock):
         """ Factory function for creating a explosion object. """
-        return Explosion(x, y, CTFImages.explosion, game_objects, clock)
+        return Explosion(x, y, sprite, game_objects, clock)

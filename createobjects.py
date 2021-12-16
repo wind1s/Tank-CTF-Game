@@ -75,9 +75,10 @@ def create_map_bounds(current_map, body):
     )
 
 
-def create_ai(tanks, game_objects, space, current_map, clock):
+def create_ai(tanks, game_objects, space, current_map, clock, difficulty):
     """ Creates the ai object to control tanks. """
     def ai_func(tank):
-        return Ai.create_ai(tank, game_objects, space, current_map, clock)
+        return Ai.create_ai(
+            tank, game_objects, space, current_map, clock, difficulty)
 
     return list_comp(tanks, func=ai_func)

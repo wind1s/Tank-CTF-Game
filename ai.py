@@ -2,10 +2,12 @@ import pymunk as pym
 import random as rand
 import math
 from utility import (
-    get_tile_position, angle_between_vectors, periodic_difference_of_angles,
-    seconds_to_ms, reduce_until_zero, list_comp)
+    get_tile_position, angle_between_vectors, lookup_call,
+    periodic_difference_of_angles, seconds_to_ms, reduce_until_zero, list_comp)
 from collections import deque
 from gameobjects import (Tank, Flag, Box)
+from config import (DIFFICULTY_EASY, DIFFICULTY_NORMAL,
+                    DIFFICULTY_HARD, DIFFICULTY_NIGHTMARE)
 
 
 class Node():
@@ -34,14 +36,15 @@ class Ai:
     MIN_POS_DIFF = 0.1
     MAX_STUCK_TIME = seconds_to_ms(1)
 
-    def __init__(self, tank, game_objects, space, current_map, clock):
+    def __init__(
+            self, tank, game_objects, space, current_map, clock, difficulty):
         self.space = space
         self.clock = clock
 
         # Buff tanks.
-        tank.max_speed *= 1.3
-        tank.bullet_max_speed *= 1.2
+
         self.tank = tank
+        self.set_difficulty(difficulty)
 
         self.flag = None
         self.game_objects = game_objects
@@ -58,13 +61,29 @@ class Ai:
         self.move_cycle = self.move_cycle_gen()
 
     @staticmethod
-    def create_ai(tank, game_objects, space, current_map, clock):
-        return Ai(tank, game_objects, space, current_map, clock)
+    def create_ai(tank, game_objects, space, current_map, clock, difficulty):
+        return Ai(tank, game_objects, space, current_map, clock, difficulty)
 
     def decide(self):
         """ Main decision function that gets called on every tick of the game. """
         next(self.move_cycle)
         self.maybe_shoot()
+
+    def set_difficulty(self, difficulty):
+
+        def difficulty_gen(percent1, percent2):
+            def gen():
+                self.tank.max_speed *= percent1
+                self.tank.bullet_max_speed *= percent2
+
+            return gen
+
+        difficulty_table = {DIFFICULTY_EASY: difficulty_gen(0.8, 1.0),
+                            DIFFICULTY_NORMAL: difficulty_gen(1.1, 1.2),
+                            DIFFICULTY_HARD: difficulty_gen(1.5, 1.8),
+                            DIFFICULTY_NIGHTMARE: difficulty_gen(2.2, 2.8)}
+
+        lookup_call(difficulty, difficulty_table)
 
     def find_target_point(self, origin, angle, length):
         offset = pym.Vec2d(0, length).rotated(angle)

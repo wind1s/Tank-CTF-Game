@@ -22,5 +22,5 @@ CTFImages(game_map.n_players)
 CTFSounds()
 
 # Init game and run game loop.
-game = CTFGame(arguments.game_mode, game_map, {})
+game = CTFGame(arguments.game_mode, game_map, {}, arguments.difficulty)
 game.run_loop()

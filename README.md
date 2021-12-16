@@ -7,6 +7,7 @@ Flag ```--game-mode```  + one of the following flags to choose game mode.
 ```singleplayer``` for singleplayer mode against ai's.
 ```hot-multiplayer``` for 2 player hot seat multiplayer mode against ai's.
 By default the game starts in singleplayer mode.
+Choose AI difficulty with the flag ```--difficulty```.
 
 To display a help menu suppliy only the ```-h``` or ```--help``` flag.
 

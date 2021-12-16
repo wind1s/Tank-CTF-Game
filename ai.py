@@ -11,6 +11,8 @@ from config import (DIFFICULTY_EASY, DIFFICULTY_NORMAL,
 
 
 class Node():
+    """Node for A* containing hcost, gcost, fcost and previous node in path"""
+
     def __init__(self, tile, hcost, gcost, previous=None):
         self.tile = tile
         self.hcost = hcost
@@ -20,6 +22,7 @@ class Node():
 
     @staticmethod
     def create_node(tile, origin, target, previous=None):
+        """Creates new node with costs based on origin and target"""
         gcost = (target - tile).length
         hcost = (origin - tile).length
         return Node(tile, hcost, gcost, previous)
@@ -62,6 +65,7 @@ class Ai:
 
     @staticmethod
     def create_ai(tank, game_objects, space, current_map, clock, difficulty):
+        """Returns new instance of AI"""
         return Ai(tank, game_objects, space, current_map, clock, difficulty)
 
     def decide(self):
@@ -86,6 +90,7 @@ class Ai:
         lookup_call(difficulty, difficulty_table)
 
     def find_target_point(self, origin, angle, length):
+        """Finds point relative to origin based on length and angle"""
         offset = pym.Vec2d(0, length).rotated(angle)
         return origin + offset
 
@@ -161,7 +166,6 @@ class Ai:
 
         while True:
             self.update_box_pos()
-
             path = self.get_path()
 
             if not path:
@@ -169,7 +173,6 @@ class Ai:
                 continue  # Start from the top of our cycle
 
             path = self.shorten_path(path)
-
             next_coord = path.popleft() + pym.Vec2d(0.5, 0.5)
             yield
 
@@ -249,8 +252,8 @@ class Ai:
         return path
 
     def find_shortest_path(self, origin, target, include_metal_box):
-        """"""
-        target = get_tile_position(target)
+        """Finds shortest path between 2 points using A* search"""
+        target_tile = get_tile_position(target)
         origin = get_tile_position(origin)
         open_nodes = [Node.create_node(origin, origin, target)]
         closed_nodes = []
@@ -269,8 +272,8 @@ class Ai:
             open_nodes.remove(current)
             closed_nodes.append(current)
 
-            if current.tile == target:
-                current.tile = target
+            if current.tile == target_tile:
+                current.tile = target - pym.Vec2d(0.5, 0.5)
 
                 while current is not None:
                     out.appendleft(current.tile)
@@ -288,6 +291,7 @@ class Ai:
         return out
 
     def find_intercept_path(self):
+        """Finds path to intercept tank with flag"""
         flag_path = self.find_prio_path(self.flag.get_pos(),
                                         self.flag.target_base)
         naive_path = self.find_prio_path(self.tank.get_pos(),
@@ -311,13 +315,10 @@ class Ai:
 
         if self.tank.flag is None:
             initial_path = self.find_prio_path(tank_pos, self.flag.get_pos())
-
             if len(initial_path) <= 3:
                 return initial_path
-
             if self.flag.is_on_tank:
                 return self.find_intercept_path()
-
             return initial_path
 
         self.update_avoid_boxes()
@@ -350,23 +351,20 @@ class Ai:
         return list_comp(self.game_objects, pred=is_other_tank)
 
     def get_tank_direction(self, tank):
+        """Gets cardinal direction of tank as 2D vector"""
         angle = tank.body.angle + math.pi/8
 
         while angle < 0:
             angle += 2*math.pi
-
         while angle >= 2*math.pi:
             angle -= 2*math.pi
 
         if angle >= 0 and angle < math.pi/2:
             return(pym.Vec2d(0, 1))
-
         elif angle >= math.pi/2 and angle < math.pi:
             return(pym.Vec2d(-1, 0))
-
         elif angle >= math.pi and angle < math.pi*(3/2):
             return(pym.Vec2d(0, -1))
-
         elif angle >= math.pi*(3/2) and angle < 2*math.pi:
             return(pym.Vec2d(1, 0))
 
@@ -393,6 +391,7 @@ class Ai:
             neighbors, func=lambda vec: vec.int_tuple, pred=tile_pred)
 
     def filter_tile_neighbors(self, coord, include_metal_box):
+        """Filters out tiles which AI cannot cross"""
         if not self.current_map.in_bounds(coord.x, coord.y):
             return False
 

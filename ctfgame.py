@@ -20,6 +20,7 @@ class CTFGame:
         self.running = True
         self.game_mode = game_mode
         self.current_map = game_map
+        self.difficulty = difficulty
 
         # Initialise the clock
         self.clock = pyg.time.Clock()
@@ -91,7 +92,8 @@ class CTFGame:
         self.running = False
 
     def restart(self):
-        self.__init__(self.game_mode, self.current_map, self.score_board)
+        self.__init__(self.game_mode, self.current_map,
+                      self.score_board, self.difficulty)
 
     def run_loop(self):
         """ Main game loop. """

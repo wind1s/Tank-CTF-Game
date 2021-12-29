@@ -30,9 +30,7 @@ class Node():
 
 class Ai:
     """
-    A simple ai that finds the shortest path to the target using
-    a breadth first search. Also capable of shooting other tanks and or wooden
-    boxes.
+    AI Which uses Astar pathfinding to navigate map
     """
 
     MIN_ANGLE_DIF = math.radians(1.5)
@@ -74,7 +72,7 @@ class Ai:
         self.maybe_shoot()
 
     def set_difficulty(self, difficulty):
-
+        """Sets difficulty of AI by changing its movespeed and bullet speed"""
         def difficulty_gen(percent1, percent2):
             def gen():
                 self.tank.max_speed *= percent1
@@ -119,14 +117,14 @@ class Ai:
 
     def turn(self, next_coord):
         """ Turns the tank toward a coordinate. """
-
         target_angle = angle_between_vectors(
             self.tank.get_pos(), next_coord)
 
         current_diff = periodic_difference_of_angles(
             self.tank.get_angle(), target_angle)
 
-        if current_diff > math.pi:
+        # Makes sure the angle is between -pi and pi radians
+        if current_diff > math.pi: 
             current_diff -= 2*math.pi
         elif current_diff < -math.pi:
             current_diff += 2*math.pi
@@ -179,7 +177,7 @@ class Ai:
             self.turn(next_coord)
 
             while not self.correct_angle(next_coord):
-                yield
+                yield  # Keeps turning until looking at target
 
             self.tank.stop_turning()
             yield
@@ -192,7 +190,7 @@ class Ai:
                 if self.stuck_timeout <= 0:
                     self.stuck_timeout = self.MAX_STUCK_TIME
                     break
-                yield
+                yield  # Keeps moving until reaching target or too much time passes
 
             self.tank.stop_moving()
 
@@ -210,7 +208,7 @@ class Ai:
                 self.updated_boxes[tile_y][tile_x] = obj.box_type
 
     def update_avoid_boxes(self):
-        """Sets tiles in other tanks' sightlines to stone walls"""
+        """Updates map to where other tanks sightlines are seen as walls"""
         self.update_box_pos()
         tanks = self.get_other_tanks()
 
@@ -220,7 +218,6 @@ class Ai:
 
             while True:
                 tile = tile + tank_dir
-
                 if self.current_map.in_bounds(tile.x, tile.y):
                     if self.updated_boxes[tile.y][tile.x] == 0:
 
@@ -241,9 +238,10 @@ class Ai:
             1, len(path) - 1), func=lambda i: path[i], pred=path_tile_is_turn))
         new_path.append(path[-1])
 
-        return new_path
+        return new_path  # Returns a path with only start, end and corner points
 
     def find_prio_path(self, origin, target):
+        """Returns shortest path without metal boxes only if there is one"""
         path = self.find_shortest_path(origin, target, False)
 
         if not path:
@@ -308,7 +306,7 @@ class Ai:
 
     def get_path(self):
         """ Finds target path. Goes to flag if on ground, intecepts tank
-        with flag if picked up. Goes to base if we have flag.
+        with flag if picked up. Goes to base avoiding others if we have flag.
         """
         self.get_flag()
         tank_pos = self.tank.get_pos()

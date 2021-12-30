@@ -21,6 +21,7 @@ class CTFImages():
 
     def __init__(self, n_players):
         default_scale = CTFImages.scale_by_tile(1)
+        half_scale = CTFImages.scale_by_tile(0.5)
 
         CTFImages.regular_explosion = self.load_image(
             EXPLOSION_IMG_FILE, CTFImages.scale_by_tile(1.5))
@@ -42,20 +43,18 @@ class CTFImages():
             BULLET_IMG_FILE, CTFImages.scale_by_tile(0.25))
         CTFImages.bullet = pyg.transform.rotate(CTFImages.bullet, -90)
 
-        half_scale = CTFImages.scale_by_tile(0.5)
-
-        def load_img_func(img):
+        def load_img(img):
             return self.load_image(img, half_scale)
 
         # List of image of tanks of different colors
         CTFImages.tank_images = list_comp(
             TANKS_IMG_FILES[:n_players],
-            func=load_img_func)
+            func=load_img)
 
         # List of image of bases corresponding to the color of each tank
         CTFImages.base_images = list_comp(
             BASES_IMG_FILES[:n_players],
-            func=load_img_func)
+            func=load_img)
 
     @ staticmethod
     def scale_by_tile(percent):

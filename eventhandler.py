@@ -24,13 +24,11 @@ class EventHandler():
             if event_type in self.event_mapping:
                 # Callback has supplied arguments.
                 event_callback = self.event_mapping[event_type]
-
                 event_callback(event)
 
     def event_quit(self, _):
         """ Quits the game. """
         self.quit_game()
-        return
 
     def event_keydown(self, event):
         """ Hanldes key down events. """

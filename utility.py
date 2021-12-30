@@ -2,6 +2,10 @@ import math
 import pymunk as pym
 from config import TILE_SIZE
 
+PI = math.pi
+TWO_PI = 2*PI
+HALF_PI = PI/2
+
 
 def remove_object(game_objects, obj, shape=None, space=None):
     """ Removes a physics object and it's body. """
@@ -59,7 +63,7 @@ def angle_between_vectors(vec1, vec2):
 
 
 def periodic_difference_of_angles(angle1, angle2):
-    return (angle1 % (2*math.pi)) - (angle2 % (2*math.pi))
+    return (angle1 % (TWO_PI)) - (angle2 % (TWO_PI))
 
 
 def physics_to_display(x):

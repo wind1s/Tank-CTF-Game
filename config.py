@@ -1,8 +1,8 @@
 """ Internal configurations for the game. """
 from os.path import (abspath, join, split)
 
-DEBUG = False  # Change this to set it in debug mode
-FRAMERATE = 60
+DEBUG = False
+FRAMERATE = 120
 TILE_SIZE = 70
 
 SINGLEPLAYER_MODE = "singleplayer"

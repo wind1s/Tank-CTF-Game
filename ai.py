@@ -3,7 +3,8 @@ import random as rand
 import math
 from utility import (
     get_tile_position, angle_between_vectors, lookup_call,
-    periodic_difference_of_angles, seconds_to_ms, reduce_until_zero, list_comp)
+    periodic_difference_of_angles, seconds_to_ms, reduce_until_zero, list_comp,
+    PI, HALF_PI, TWO_PI)
 from collections import deque
 from gameobjects import (Tank, Flag, Box)
 from config import (DIFFICULTY_EASY, DIFFICULTY_NORMAL,
@@ -73,10 +74,10 @@ class Ai:
 
     def set_difficulty(self, difficulty):
         """Sets difficulty of AI by changing its movespeed and bullet speed"""
-        def difficulty_gen(percent1, percent2):
+        def difficulty_gen(speed_percent, bullet_speed_percent):
             def gen():
-                self.tank.max_speed *= percent1
-                self.tank.bullet_max_speed *= percent2
+                self.tank.max_speed *= speed_percent
+                self.tank.bullet_max_speed *= bullet_speed_percent
 
             return gen
 
@@ -104,15 +105,15 @@ class Ai:
         type_hit = self.space.segment_query_first(
             start, end, 0, pym.ShapeFilter())
 
+        # If the type we hit has a shape and parent attribute it can be a game object.
         if hasattr(
                 type_hit, "shape") and hasattr(
                 type_hit.shape, "parent"):
 
-            parent = type_hit.shape.parent
+            obj_type = type_hit.shape.parent
 
-            if isinstance(parent, Tank) or (
-                    isinstance(parent, Box) and parent.box_type
-                    in (Box.WOODBOX_TYPE, )):
+            if isinstance(obj_type, Tank) or (
+                    isinstance(obj_type, Box) and obj_type.box_type == Box.WOODBOX_TYPE):
                 self.tank.shoot(self.game_objects)
 
     def turn(self, next_coord):
@@ -124,10 +125,10 @@ class Ai:
             self.tank.get_angle(), target_angle)
 
         # Makes sure the angle is between -pi and pi radians
-        if current_diff > math.pi: 
-            current_diff -= 2*math.pi
-        elif current_diff < -math.pi:
-            current_diff += 2*math.pi
+        if current_diff > PI:
+            current_diff -= TWO_PI
+        elif current_diff < -PI:
+            current_diff += TWO_PI
 
         if current_diff > 0:
             self.tank.turn_left()
@@ -187,6 +188,7 @@ class Ai:
             while not self.correct_pos(next_coord):
                 self.stuck_timeout = reduce_until_zero(
                     self.stuck_timeout, self.clock.get_time())
+
                 if self.stuck_timeout <= 0:
                     self.stuck_timeout = self.MAX_STUCK_TIME
                     break
@@ -196,11 +198,11 @@ class Ai:
 
     def update_box_pos(self):
         """Creates a grid of current positions of boxes"""
-        def zero_2d_matrix():
-            return [[0 for _ in range(self.current_map.width)]
-                    for _ in range(self.current_map.height)]
 
-        self.updated_boxes = zero_2d_matrix()
+        # Create a grass tile map.
+        self.updated_boxes = [
+            [Box.GRASS_TYPE for _ in range(self.current_map.width)]
+            for _ in range(self.current_map.height)]
 
         for obj in self.game_objects:
             if isinstance(obj, Box):
@@ -218,16 +220,17 @@ class Ai:
 
             while True:
                 tile = tile + tank_dir
-                if self.current_map.in_bounds(tile.x, tile.y):
-                    if self.updated_boxes[tile.y][tile.x] == 0:
 
-                        self.updated_boxes[tile.y][tile.x] = 1
-                    elif self.updated_boxes[tile.y][tile.x] > 0:
-                        self.updated_boxes[tile.y][tile.x] = 1
+                if self.current_map.in_bounds(tile.x, tile.y):
+
+                    if self.updated_boxes[tile.y][tile.x] == Box.GRASS_TYPE:
+                        self.updated_boxes[tile.y][tile.x] = Box.ROCKBOX_TYPE
+
+                    else:
+                        self.updated_boxes[tile.y][tile.x] = Box.ROCKBOX_TYPE
                         break
                 else:
                     break
-        return
 
     def shorten_path(self, path):
         """ Shortens the path generated from an A* search."""
@@ -290,19 +293,23 @@ class Ai:
 
     def find_intercept_path(self):
         """Finds path to intercept tank with flag"""
-        flag_path = self.find_prio_path(self.flag.get_pos(),
-                                        self.flag.target_base)
-        naive_path = self.find_prio_path(self.tank.get_pos(),
-                                         self.flag.target_base)
+        tank_pos = self.tank.get_pos()
+        target_base = self.flag.target_base
+        flag_path = self.find_prio_path(self.flag.get_pos(), target_base)
+        naive_path = self.find_prio_path(tank_pos, target_base)
 
+        # Default interception point.
         intercept_point = flag_path[len(flag_path)//2]
 
-        for coord1, coord2 in zip(flag_path, naive_path):
-            if coord1 == coord2:
-                intercept_point = coord1
+        # Iterate until the coordinate does not match.
+        # The last set coord is then the first common coordinate.
+        for coord1, coord2 in zip(reversed(flag_path), reversed(naive_path)):
+            if coord1 != coord2:
                 break
 
-        return self.find_prio_path(self.tank.get_pos(), intercept_point)
+            intercept_point = coord1
+
+        return self.find_prio_path(tank_pos, intercept_point)
 
     def get_path(self):
         """ Finds target path. Goes to flag if on ground, intecepts tank
@@ -313,10 +320,13 @@ class Ai:
 
         if self.tank.flag is None:
             initial_path = self.find_prio_path(tank_pos, self.flag.get_pos())
+
             if len(initial_path) <= 3:
                 return initial_path
+
             if self.flag.is_on_tank:
                 return self.find_intercept_path()
+
             return initial_path
 
         self.update_avoid_boxes()
@@ -350,20 +360,20 @@ class Ai:
 
     def get_tank_direction(self, tank):
         """Gets cardinal direction of tank as 2D vector"""
-        angle = tank.body.angle + math.pi/8
+        angle = tank.get_angle() + PI/8
 
         while angle < 0:
-            angle += 2*math.pi
-        while angle >= 2*math.pi:
-            angle -= 2*math.pi
+            angle += TWO_PI
+        while angle >= TWO_PI:
+            angle -= TWO_PI
 
-        if angle >= 0 and angle < math.pi/2:
+        if 0 <= angle < HALF_PI:
             return(pym.Vec2d(0, 1))
-        elif angle >= math.pi/2 and angle < math.pi:
+        elif PI/2 <= angle < PI:
             return(pym.Vec2d(-1, 0))
-        elif angle >= math.pi and angle < math.pi*(3/2):
+        elif PI <= angle < HALF_PI*3:
             return(pym.Vec2d(0, -1))
-        elif angle >= math.pi*(3/2) and angle < 2*math.pi:
+        elif HALF_PI * 3 <= angle < TWO_PI:
             return(pym.Vec2d(1, 0))
 
         return None
@@ -390,10 +400,12 @@ class Ai:
 
     def filter_tile_neighbors(self, coord, include_metal_box):
         """Filters out tiles which AI cannot cross"""
-        if not self.current_map.in_bounds(coord.x, coord.y):
+        x, y = coord.x, coord.y
+
+        if not self.current_map.in_bounds(x, y):
             return False
 
-        box_type = self.updated_boxes[coord.y][coord.x]
+        box_type = self.updated_boxes[y][x]
 
         box_is_wood = box_type == Box.WOODBOX_TYPE
         box_is_grass = box_type == Box.GRASS_TYPE

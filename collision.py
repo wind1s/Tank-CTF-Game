@@ -10,22 +10,19 @@ class CollisionHandler():
         self.ai_objects = ai_objects
         self.clock = clock
 
-        self.add_collision_handler(
-            Bullet.COLLISION_TYPE, Box.COLLISION_TYPE,
-            self.collision_bullet, self.collision_box_bullet)
+        handler_data = (
+            (Bullet.COLLISION_TYPE, Box.COLLISION_TYPE,
+             self.collision_bullet, self.collision_box_bullet),
+            (Bullet.COLLISION_TYPE, Tank.COLLISION_TYPE,
+             self.collision_bullet, self.collision_tank_bullet),
+            (Bullet.COLLISION_TYPE, Bullet.COLLISION_TYPE,
+             self.collision_bullet, self.collision_bullet),
+            (Bullet.COLLISION_TYPE, 0,
+             self.collision_bullet, lambda *_: None)  # Default bullet collision handler.
+        )
 
-        self.add_collision_handler(
-            Bullet.COLLISION_TYPE, Tank.COLLISION_TYPE,
-            self.collision_bullet, self.collision_tank_bullet)
-
-        self.add_collision_handler(
-            Bullet.COLLISION_TYPE, Bullet.COLLISION_TYPE,
-            self.collision_bullet, self.collision_bullet)
-
-        # Default collision handler.
-        self.add_collision_handler(
-            Bullet.COLLISION_TYPE, 0,
-            self.collision_bullet, lambda *_: None)
+        for data in handler_data:
+            self.add_collision_handler(*data)
 
     def add_collision_handler(self, type1, type2, handler1, handler2):
         """ Adds a new collision handler to the space. """

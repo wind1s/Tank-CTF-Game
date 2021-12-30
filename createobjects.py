@@ -8,13 +8,12 @@ from utility import list_comp
 
 
 def create_grass_background(current_map, screen):
+    """ Creates the grass game background. """
     background = pyg.Surface(screen.get_size())
-    #   Copy the grass tile all over the level area
+    # Copy the grass tile all over the level area
+
     for x in range(current_map.width):
         for y in range(current_map.height):
-            # The call to the function "blit" will copy the image
-            # contained in "images.grass" into the "background"
-            # image at the coordinates given as the second argument
             background.blit(
                 CTFImages.grass,
                 (x * TILE_SIZE, y * TILE_SIZE))
